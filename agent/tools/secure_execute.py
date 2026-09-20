@@ -12,11 +12,12 @@ class SecureExecute:
     ) -> None:
         self._client = client
 
-    def execute(self, resource: str) -> str:
+    def execute(self, resource: str, repeated: bool = False) -> str:
 
         result = self._client.request(
             operation=Operation.EXECUTE,
             resource=resource,
+            repeated=repeated,
         )
 
         if not result.authorization.allowed:
