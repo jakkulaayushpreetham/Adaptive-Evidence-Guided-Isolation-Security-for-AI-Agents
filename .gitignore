@@ -1,0 +1,9 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+dist/
+*.db
+results/logs/*
+!results/logs/.gitkeep

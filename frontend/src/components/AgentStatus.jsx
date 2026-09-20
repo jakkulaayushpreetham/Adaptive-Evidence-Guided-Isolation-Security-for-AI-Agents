@@ -1,0 +1,1 @@
+// Agent running status indicator

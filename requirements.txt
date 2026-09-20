@@ -1,0 +1,13 @@
+# Core dependencies to be specified in subsequent phases
+
+fastapi
+uvicorn[standard]
+pydantic
+pytest
+pytest-asyncio
+httpx
+psutil
+docker
+sqlalchemy
+aiosqlite
+python-dotenv
