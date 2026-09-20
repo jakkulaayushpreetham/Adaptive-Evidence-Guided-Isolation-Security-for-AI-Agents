@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, AlertCircle, Shield, Layers, Scale, Sparkles } from 'lucide-react';
+import { Activity, AlertCircle, Shield, Layers, Scale, Sparkles, CheckCircle2, AlertTriangle, HelpCircle } from 'lucide-react';
 
 export default function TrustPanel({ trust }) {
   const mass = trust?.mass || { trustworthy: 0.0, untrustworthy: 0.0, uncertainty: 1.0 };
@@ -15,20 +15,24 @@ export default function TrustPanel({ trust }) {
       return {
         text: 'LOW CONFLICT',
         color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
+        desc: 'Sensors agree on agent behavior',
       };
     if (k < 0.50)
       return {
         text: 'MODERATE CONFLICT',
         color: 'text-sky-400 bg-sky-500/10 border-sky-500/30',
+        desc: 'Minor divergence in observed events',
       };
     if (k < 0.80)
       return {
-        text: 'HIGH CONFLICT (THRESHOLD)',
+        text: 'HIGH CONFLICT',
         color: 'text-amber-400 bg-amber-500/15 border-amber-500/40 animate-pulse font-bold',
+        desc: 'Agent performed both benign and suspicious actions',
       };
     return {
-      text: 'CRITICAL CONFLICT (DISSONANCE)',
+      text: 'CRITICAL DISSONANCE',
       color: 'text-rose-400 bg-rose-500/20 border-rose-500/50 animate-pulse font-extrabold',
+      desc: 'Extreme contradiction in evidence',
     };
   };
 
@@ -45,10 +49,10 @@ export default function TrustPanel({ trust }) {
             </div>
             <div>
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">
-                Dempster-Shafer Consensus
+                Agent Trust &amp; Threat Analysis
               </h3>
               <div className="text-[11px] text-slate-400">
-                Frame of Discernment &Theta; = &#123;T, U&#125;
+                Evidence Fusion Engine &bull; Dempster-Shafer Model
               </div>
             </div>
           </div>
@@ -56,28 +60,33 @@ export default function TrustPanel({ trust }) {
           <div className="flex items-center gap-2">
             <span
               className={`px-2 py-0.5 rounded text-[10px] font-mono border font-semibold ${conflictBadge.color}`}
+              title={conflictBadge.desc}
             >
-              K = {conflictK.toFixed(3)}
+              Conflict K = {conflictK.toFixed(3)}
             </span>
             <span className="text-[11px] text-slate-400 font-mono px-2 py-0.5 bg-slate-900 rounded-lg border border-white/[0.06]">
-              {trust?.evidence_count ?? 0} Fused
+              {trust?.evidence_count ?? 0} Events Analyzed
             </span>
           </div>
         </div>
 
-        {/* Mass Distributions */}
+        {/* Human-Centric Trust Metrics */}
         <div className="space-y-3">
-          {/* m(T) - Trustworthy Belief */}
+          {/* Verified Compliance / Trust m(T) */}
           <div>
-            <div className="flex justify-between text-xs font-medium mb-1">
-              <span className="text-emerald-400 font-mono flex items-center gap-1.5">
+            <div className="flex justify-between items-baseline text-xs mb-1">
+              <span className="text-emerald-300 font-semibold flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-                m(T) Trustworthy Belief
+                Verified Trust / Compliance
               </span>
-              <span className="text-slate-100 font-mono font-bold">
-                {(mT * 100).toFixed(1)}%{' '}
-                <span className="text-slate-500 font-normal">({mT.toFixed(3)})</span>
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-emerald-400 font-mono font-bold text-xs">
+                  {(mT * 100).toFixed(1)}%
+                </span>
+                <span className="text-[10px] font-mono text-slate-500">
+                  m(T)={mT.toFixed(3)}
+                </span>
+              </div>
             </div>
             <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
               <div
@@ -85,19 +94,26 @@ export default function TrustPanel({ trust }) {
                 style={{ width: `${Math.min(100, Math.max(0, mT * 100))}%` }}
               />
             </div>
+            <div className="text-[10px] text-slate-400 mt-0.5">
+              Accumulates when agent performs compliant operations within its assigned scope.
+            </div>
           </div>
 
-          {/* m(U) - Distrust Evidence */}
+          {/* Threat Suspicion / Distrust m(U) */}
           <div>
-            <div className="flex justify-between text-xs font-medium mb-1">
-              <span className="text-rose-400 font-mono flex items-center gap-1.5">
+            <div className="flex justify-between items-baseline text-xs mb-1">
+              <span className="text-rose-300 font-semibold flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
-                m(U) Distrust Evidence
+                Threat Suspicion / Distrust
               </span>
-              <span className="text-slate-100 font-mono font-bold">
-                {(mU * 100).toFixed(1)}%{' '}
-                <span className="text-slate-500 font-normal">({mU.toFixed(3)})</span>
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-rose-400 font-mono font-bold text-xs">
+                  {(mU * 100).toFixed(1)}%
+                </span>
+                <span className="text-[10px] font-mono text-slate-500">
+                  m(U)={mU.toFixed(3)}
+                </span>
+              </div>
             </div>
             <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
               <div
@@ -105,19 +121,26 @@ export default function TrustPanel({ trust }) {
                 style={{ width: `${Math.min(100, Math.max(0, mU * 100))}%` }}
               />
             </div>
+            <div className="text-[10px] text-slate-400 mt-0.5">
+              Accumulates on security violations (triggers Revocation at &ge;60%, Lockdown at &ge;85%).
+            </div>
           </div>
 
-          {/* m(Θ) - Epistemic Uncertainty */}
+          {/* Uncertainty / Pending Evidence m(Theta) */}
           <div>
-            <div className="flex justify-between text-xs font-medium mb-1">
-              <span className="text-cyan-400 font-mono flex items-center gap-1.5">
+            <div className="flex justify-between items-baseline text-xs mb-1">
+              <span className="text-cyan-300 font-semibold flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
-                m(&Theta;) Epistemic Uncertainty
+                Pending Data / Uncertainty
               </span>
-              <span className="text-slate-100 font-mono font-bold">
-                {(mTheta * 100).toFixed(1)}%{' '}
-                <span className="text-slate-500 font-normal">({mTheta.toFixed(3)})</span>
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-cyan-400 font-mono font-bold text-xs">
+                  {(mTheta * 100).toFixed(1)}%
+                </span>
+                <span className="text-[10px] font-mono text-slate-500">
+                  m(&Theta;)={mTheta.toFixed(3)}
+                </span>
+              </div>
             </div>
             <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
               <div
@@ -125,21 +148,23 @@ export default function TrustPanel({ trust }) {
                 style={{ width: `${Math.min(100, Math.max(0, mTheta * 100))}%` }}
               />
             </div>
+            <div className="text-[10px] text-slate-400 mt-0.5">
+              Reflects unknown behavior. Diminishes as the agent generates runtime operations.
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Belief Bounds & Mathematical Invariant */}
-      <div className="mt-3.5 pt-2.5 border-t border-white/[0.08] flex items-center justify-between text-xs font-mono">
-        <div className="text-slate-400 flex items-center gap-1.5">
-          <Layers className="w-3.5 h-3.5 text-purple-400" />
-          <span>Belief Range:</span>
-          <span className="text-white font-extrabold px-1.5 py-0.5 rounded bg-purple-950/40 border border-purple-500/30">
-            [{belT.toFixed(2)}, {plT.toFixed(2)}]
-          </span>
+      {/* Clear Policy Thresholds Bar */}
+      <div className="mt-3.5 pt-2.5 border-t border-white/[0.08] flex items-center justify-between text-[11px]">
+        <div className="flex items-center gap-2 text-slate-300 font-medium">
+          <span className="text-slate-400">Policy Bounds:</span>
+          <span className="text-emerald-400 font-bold">&lt;60% Safe</span> &bull;
+          <span className="text-amber-400 font-bold">&ge;60% Restrict</span> &bull;
+          <span className="text-rose-400 font-bold">&ge;85% Quarantine</span>
         </div>
-        <div className="text-slate-400 text-[11px]">
-          Bel(T) = {belT.toFixed(2)} &le; Pl(T) = {plT.toFixed(2)}
+        <div className="text-slate-400 font-mono text-[10px]">
+          Confidence [{belT.toFixed(2)}, {plT.toFixed(2)}]
         </div>
       </div>
     </div>

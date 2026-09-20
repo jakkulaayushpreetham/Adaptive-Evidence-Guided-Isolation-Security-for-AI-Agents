@@ -45,9 +45,15 @@ export default function Dashboard() {
           api.getTimeline(taskId),
         ]);
 
-      if (tData.status === 'fulfilled') setTask(tData.value);
-      if (capsData.status === 'fulfilled') setCapabilities(capsData.value);
-      if (trustData.status === 'fulfilled') {
+      if (tData.status === 'fulfilled' && tData.value) {
+        setTask(tData.value);
+      } else {
+        localStorage.removeItem('aegis_active_task_id');
+        throw new Error('Task not found on backend');
+      }
+
+      if (capsData.status === 'fulfilled') setCapabilities(capsData.value || []);
+      if (trustData.status === 'fulfilled' && trustData.value) {
         setTrust(trustData.value);
         if (trustData.value.security_state) {
           setSecurityState(trustData.value.security_state);
@@ -56,16 +62,17 @@ export default function Dashboard() {
       if (historyData.status === 'fulfilled' && Array.isArray(historyData.value)) {
         setTrustHistory(historyData.value);
       }
-      if (eventsData.status === 'fulfilled') setEvents(eventsData.value);
-      if (timelineData.status === 'fulfilled') setTimeline(timelineData.value);
+      if (eventsData.status === 'fulfilled') setEvents(eventsData.value || []);
+      if (timelineData.status === 'fulfilled') setTimeline(timelineData.value || []);
     } catch (err) {
-      console.error('Failed to load snapshot:', err);
+      console.warn('Failed to load snapshot:', err.message);
+      throw err;
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Initialize or restore active task
+  // Initialize or restore active task with auto-healing
   const initializeTask = useCallback(async () => {
     const savedTaskId = localStorage.getItem('aegis_active_task_id');
     if (savedTaskId) {

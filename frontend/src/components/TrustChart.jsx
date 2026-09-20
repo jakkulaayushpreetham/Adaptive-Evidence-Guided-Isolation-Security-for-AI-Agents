@@ -56,9 +56,9 @@ export default function TrustChart({ history = [] }) {
     }
     return {
       name: timeLabel,
-      'm(T) Trust': parseFloat(Number(item.m_T || 0).toFixed(3)),
-      'm(U) Distrust': parseFloat(Number(item.m_U || 0).toFixed(3)),
-      'm(Θ) Uncertainty': parseFloat(Number(item.m_Theta ?? 1.0).toFixed(3)),
+      'Trust Compliance m(T)': parseFloat(Number(item.m_T || 0).toFixed(3)),
+      'Threat Suspicion m(U)': parseFloat(Number(item.m_U || 0).toFixed(3)),
+      'Uncertainty m(Θ)': parseFloat(Number(item.m_Theta ?? 1.0).toFixed(3)),
       conflict: parseFloat(Number(item.conflict_K || 0).toFixed(3)),
     };
   });
@@ -75,18 +75,18 @@ export default function TrustChart({ history = [] }) {
           </div>
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">
-              Dempster-Shafer Trust Trajectory
+              Agent Trust &amp; Suspicion Trajectory
             </h3>
             <div className="text-[11px] text-slate-400">
-              Continuous Mass Distribution &amp; Epistemic Uncertainty Dynamics
+              Live Evolution: Compliance (Green) &bull; Suspicion (Red) &bull; Uncertainty (Cyan)
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-3 text-xs font-mono">
           <span className="text-slate-400">
-            Current: <span className="text-emerald-400 font-bold">m(T)={latest['m(T) Trust']}</span> |{' '}
-            <span className="text-rose-400 font-bold">m(U)={latest['m(U) Distrust']}</span>
+            Trust: <span className="text-emerald-400 font-bold">{latest['Trust Compliance m(T)']}</span> |{' '}
+            Suspicion: <span className="text-rose-400 font-bold">{latest['Threat Suspicion m(U)']}</span>
           </span>
           <span className="px-2 py-0.5 rounded-lg bg-slate-900 text-slate-300 border border-white/[0.06] text-[10px] font-semibold">
             {history.length} Snapshots
@@ -145,7 +145,7 @@ export default function TrustChart({ history = [] }) {
               stroke="#f59e0b"
               strokeDasharray="4 4"
               label={{
-                value: 'Restricted (0.60)',
+                value: 'Revocation Threshold (60%)',
                 fill: '#f59e0b',
                 fontSize: 10,
                 position: 'insideTopRight',
@@ -156,7 +156,7 @@ export default function TrustChart({ history = [] }) {
               stroke="#f43f5e"
               strokeDasharray="4 4"
               label={{
-                value: 'Critical (0.85)',
+                value: 'Lockdown Threshold (85%)',
                 fill: '#f43f5e',
                 fontSize: 10,
                 position: 'insideTopRight',
@@ -165,7 +165,7 @@ export default function TrustChart({ history = [] }) {
 
             <Area
               type="monotone"
-              dataKey="m(T) Trust"
+              dataKey="Trust Compliance m(T)"
               stroke="#10b981"
               strokeWidth={2}
               fillOpacity={1}
@@ -173,7 +173,7 @@ export default function TrustChart({ history = [] }) {
             />
             <Area
               type="monotone"
-              dataKey="m(U) Distrust"
+              dataKey="Threat Suspicion m(U)"
               stroke="#f43f5e"
               strokeWidth={2}
               fillOpacity={1}
@@ -181,7 +181,7 @@ export default function TrustChart({ history = [] }) {
             />
             <Area
               type="monotone"
-              dataKey="m(Θ) Uncertainty"
+              dataKey="Uncertainty m(Θ)"
               stroke="#06b6d4"
               strokeWidth={2}
               fillOpacity={1}
