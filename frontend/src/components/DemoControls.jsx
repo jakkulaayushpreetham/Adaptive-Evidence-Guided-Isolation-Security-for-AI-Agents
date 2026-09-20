@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, PlusCircle, Globe, FileWarning, ShieldAlert, RotateCcw, AlertTriangle } from 'lucide-react';
+import { Play, PlusCircle, Globe, FileWarning, ShieldAlert, RotateCcw, AlertTriangle, ShieldCheck, Terminal, Loader2 } from 'lucide-react';
 
 export default function DemoControls({
   onCreateDemoTask,
@@ -22,60 +22,80 @@ export default function DemoControls({
   };
 
   return (
-    <div className="soc-card">
-      <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
-        <div className="flex items-center gap-2">
-          <ShieldAlert className="w-4 h-4 text-rose-400" />
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-300">
-            Authoritative Demonstration Controls
-          </span>
-        </div>
-        <span className="text-[11px] text-slate-500 mono">
-          Live SecurityRuntime Execution Gateway
-        </span>
-      </div>
+    <div className="soc-card relative overflow-hidden bg-gradient-to-r from-slate-900/95 via-[#0d1424]/95 to-slate-900/95 border border-sky-500/20 shadow-[0_4px_30px_rgba(0,0,0,0.6)]">
+      {/* Background cyber accent line */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-80" />
 
-      <div className="space-y-3">
-        {/* Row 1: Task Lifecycle */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        {/* Left: Console Header */}
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/40 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.25)]">
+            <ShieldAlert className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-white tracking-wide uppercase">
+                Interactive Security Gateway
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 mono font-semibold">
+                HOT-PATH CONTROLS
+              </span>
+            </div>
+            <p className="text-xs text-slate-400">
+              Live Reference Monitor &amp; Autonomous Agent Tool Gateway Execution
+            </p>
+          </div>
+        </div>
+
+        {/* Right: Action Button Groups */}
         <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            onClick={() => handleAction('create', onCreateDemoTask)}
-            disabled={loadingAction !== null}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-100 rounded-lg text-xs font-semibold border border-slate-700 transition-colors shadow-sm"
-          >
-            <PlusCircle className="w-3.5 h-3.5 text-sky-400" />
-            Create Demo Task
-          </button>
+          {/* Task Operations */}
+          <div className="flex items-center gap-2 p-1 rounded-xl bg-slate-950/60 border border-slate-800">
+            <button
+              onClick={() => handleAction('create', onCreateDemoTask)}
+              disabled={loadingAction !== null}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/80 hover:bg-slate-700 text-slate-100 rounded-lg text-xs font-semibold border border-slate-700/80 transition-all hover:scale-[1.02] shadow-sm cursor-pointer disabled:opacity-50"
+            >
+              {loadingAction === 'create' ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-400" />
+              ) : (
+                <PlusCircle className="w-3.5 h-3.5 text-cyan-400" />
+              )}
+              <span>New Task</span>
+            </button>
 
-          <button
-            onClick={() => handleAction('run', onRunNormalTask)}
-            disabled={!isTaskActive || isRunning || isCritical || loadingAction !== null}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:hover:bg-emerald-600 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm"
-          >
-            <Play className="w-3.5 h-3.5 fill-current" />
-            Run Normal Task
-          </button>
-        </div>
-
-        {/* Row 2: Security Attacks */}
-        <div>
-          <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-1.5 flex items-center gap-1">
-            <AlertTriangle className="w-3 h-3 text-amber-400" />
-            Adversarial Probes &amp; Security Violations:
+            <button
+              onClick={() => handleAction('run', onRunNormalTask)}
+              disabled={!isTaskActive || isRunning || isCritical || loadingAction !== null}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold transition-all hover:scale-[1.02] shadow-[0_0_15px_rgba(16,185,129,0.3)] cursor-pointer disabled:opacity-40 disabled:hover:scale-100 disabled:shadow-none"
+            >
+              {isRunning || loadingAction === 'run' ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Play className="w-3.5 h-3.5 fill-current" />
+              )}
+              <span>Execute Task</span>
+            </button>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          {/* Adversarial Attacks Group */}
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-950/60 border border-slate-800">
             <button
               onClick={() =>
                 handleAction('network', () =>
-                  onSimulateAttack('NETWORK', 'https://exfiltrate-data.org/leak')
+                  onSimulateAttack('NETWORK', 'https://exfiltrate.example.org')
                 )
               }
               disabled={!isTaskActive || isCritical || loadingAction !== null}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 disabled:opacity-40 text-rose-300 rounded-lg text-xs font-medium border border-rose-800/60 transition-colors"
+              title="Attempts unauthorized outbound network probe"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-950/30 hover:bg-rose-900/50 text-rose-300 rounded-lg text-xs font-medium border border-rose-800/50 hover:border-rose-600/80 transition-all cursor-pointer disabled:opacity-40"
             >
-              <Globe className="w-3.5 h-3.5 text-rose-400" />
-              Attempt Unauthorized Network
+              {loadingAction === 'network' ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-400" />
+              ) : (
+                <Globe className="w-3.5 h-3.5 text-rose-400" />
+              )}
+              <span>Probe Network</span>
             </button>
 
             <button
@@ -85,34 +105,50 @@ export default function DemoControls({
                 )
               }
               disabled={!isTaskActive || isCritical || loadingAction !== null}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 disabled:opacity-40 text-rose-300 rounded-lg text-xs font-medium border border-rose-800/60 transition-colors"
+              title="Attempts unauthorized private credentials file read"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-950/30 hover:bg-rose-900/50 text-rose-300 rounded-lg text-xs font-medium border border-rose-800/50 hover:border-rose-600/80 transition-all cursor-pointer disabled:opacity-40"
             >
-              <FileWarning className="w-3.5 h-3.5 text-rose-400" />
-              Attempt Private File Read
+              {loadingAction === 'private_read' ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-400" />
+              ) : (
+                <FileWarning className="w-3.5 h-3.5 text-rose-400" />
+              )}
+              <span>Private File Read</span>
             </button>
 
             <button
               onClick={() =>
                 handleAction('write', () =>
-                  onSimulateAttack('WRITE_FILE', '/workspace/output/tamper.txt')
+                  onSimulateAttack('WRITE_FILE', '/workspace/output/summary.txt')
                 )
               }
               disabled={!isTaskActive || isCritical || loadingAction !== null}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-950/40 hover:bg-amber-900/60 disabled:opacity-40 text-amber-300 rounded-lg text-xs font-medium border border-amber-800/60 transition-colors"
+              title="Attempts write to summary file (tests post-revocation denial)"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-950/30 hover:bg-amber-900/50 text-amber-300 rounded-lg text-xs font-medium border border-amber-800/50 hover:border-amber-600/80 transition-all cursor-pointer disabled:opacity-40"
             >
-              <FileWarning className="w-3.5 h-3.5 text-amber-400" />
-              Attempt Revoked Write
-            </button>
-
-            <button
-              onClick={() => handleAction('reset', onResetDemo)}
-              disabled={loadingAction !== null}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-slate-400 hover:text-slate-200 rounded-lg text-xs font-medium border border-slate-800 transition-colors ml-auto"
-            >
-              <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
-              Reset Demo
+              {loadingAction === 'write' ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
+              ) : (
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+              )}
+              <span>Test Revoked Write</span>
             </button>
           </div>
+
+          {/* Reset Demo Button */}
+          <button
+            onClick={() => handleAction('reset', onResetDemo)}
+            disabled={loadingAction !== null}
+            title="Reset active agent, task, and security state to clean baseline"
+            className="flex items-center gap-1.5 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-100 rounded-xl text-xs font-medium border border-slate-800 hover:border-slate-700 transition-all cursor-pointer disabled:opacity-50"
+          >
+            {loadingAction === 'reset' ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <RotateCcw className="w-3.5 h-3.5" />
+            )}
+            <span>Reset</span>
+          </button>
         </div>
       </div>
     </div>

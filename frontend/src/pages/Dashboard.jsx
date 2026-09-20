@@ -4,7 +4,6 @@ import { SOCWebSocket } from '../api/websocket';
 import SecurityState from '../components/SecurityState';
 import CapabilityPanel from '../components/CapabilityPanel';
 import TrustPanel from '../components/TrustPanel';
-import ConflictMeter from '../components/ConflictMeter';
 import EventStream from '../components/EventStream';
 import TaskPanel from '../components/TaskPanel';
 import AgentPassport from '../components/AgentPassport';
@@ -13,7 +12,7 @@ import RevocationPanel from '../components/RevocationPanel';
 import IncidentTimeline from '../components/IncidentTimeline';
 import AgentStatus from '../components/AgentStatus';
 import DemoControls from '../components/DemoControls';
-import { Shield, RefreshCw } from 'lucide-react';
+import { Shield, RefreshCw, Cpu, Activity, ShieldCheck } from 'lucide-react';
 
 export default function Dashboard() {
   const [task, setTask] = useState(null);
@@ -78,7 +77,6 @@ export default function Dashboard() {
       }
     }
 
-    // Auto-create initial task if none saved
     try {
       const newTask = await api.createTask(
         'Summarize internal research documents and output security analysis posture.'
@@ -242,7 +240,6 @@ export default function Dashboard() {
     try {
       setIsRunningTask(true);
       await api.runTask(task.task_id);
-      // Re-sync snapshot after task execution
       await loadTaskSnapshot(task.task_id);
     } catch (err) {
       console.error('Failed to run task:', err);
@@ -261,14 +258,12 @@ export default function Dashboard() {
         resource
       );
 
-      // Instant state reconciliation
       setSecurityState(result.security_state);
       if (result.isolation_required) {
         setIsolationRequired(true);
         setIsolationStatus('REQUESTED');
       }
 
-      // Re-sync capabilities and trust state from backend authority
       const [caps, tr] = await Promise.all([
         api.getCapabilities(task.task_id),
         api.getTrustState(task.task_id),
@@ -288,29 +283,29 @@ export default function Dashboard() {
   const revokedCaps = capabilities.filter((c) => c.status === 'REVOKED');
 
   return (
-    <div className="min-h-screen bg-[#0a0d14] text-slate-100 p-4 lg:p-6 flex flex-col space-y-5">
+    <div className="min-h-screen bg-[#070a12] text-slate-100 p-4 lg:p-6 flex flex-col space-y-4">
       {/* Top Header Bar */}
-      <header className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
+      <header className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-slate-800/80">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-sky-500/20 to-purple-600/20 border border-sky-500/40 shadow-[0_0_15px_rgba(56,189,248,0.2)]">
-            <Shield className="w-6 h-6 text-sky-400" />
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/40 shadow-[0_0_20px_rgba(6,182,212,0.25)] text-cyan-400">
+            <Shield className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold tracking-tight text-white">
+              <h1 className="text-xl font-extrabold tracking-tight text-white">
                 AEGIS-AI SOC
               </h1>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 font-mono font-bold">
                 v1.0-RESEARCH
               </span>
             </div>
-            <div className="text-xs text-slate-400">
-              Task-Scoped Adaptive OS Capability Enforcement with Dempster-Shafer Trust Modeling
-            </div>
+            <p className="text-xs text-slate-400">
+              Adaptive OS Security Architecture for Autonomous Agent Execution
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <AgentStatus
             wsConnected={wsConnected}
             securityState={securityState}
@@ -320,83 +315,79 @@ export default function Dashboard() {
             onClick={() => task && loadTaskSnapshot(task.task_id)}
             disabled={isLoading}
             title="Refresh snapshot from REST API"
-            className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+            className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-cyan-400' : ''}`} />
           </button>
         </div>
       </header>
 
-      {/* Authoritative Demonstration Controls */}
-      <section>
-        <DemoControls
-          onCreateDemoTask={handleCreateDemoTask}
-          onRunNormalTask={handleRunNormalTask}
-          onSimulateAttack={handleSimulateAttack}
-          onResetDemo={handleResetDemo}
-          isTaskActive={Boolean(task)}
-          isRunning={isRunningTask}
-          isCritical={securityState === 'CRITICAL'}
-        />
-      </section>
+      {/* Top Command Gateway */}
+      <DemoControls
+        onCreateDemoTask={handleCreateDemoTask}
+        onRunNormalTask={handleRunNormalTask}
+        onSimulateAttack={handleSimulateAttack}
+        onResetDemo={handleResetDemo}
+        isTaskActive={Boolean(task)}
+        isRunning={isRunningTask}
+        isCritical={securityState === 'CRITICAL'}
+      />
 
-      {/* Row 1: Task, Security State, Agent Passport */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <TaskPanel
-          task={task}
-          onRunTask={handleRunNormalTask}
-          isRunning={isRunningTask}
-        />
-        <SecurityState
-          state={securityState}
-          isolationRequired={isolationRequired}
-          isolationStatus={isolationStatus}
-          containerRunning={false} // Container was not running in test env; shows ISOLATION REQUESTED / VERIFIED appropriately
-        />
-        <AgentPassport
-          agentId={task?.agent_id}
-          taskId={task?.task_id}
-          trust={trust}
-          activeCapsCount={activeCapsCount}
-        />
-      </section>
+      {/* High-Impact 2-Column Responsive Command Center Grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
+        {/* ================= LEFT COLUMN: Core Telemetry & Dynamics (7 Cols) ================= */}
+        <div className="xl:col-span-7 flex flex-col space-y-4">
+          {/* Top Row: Security State & Task Scope */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <SecurityState
+              state={securityState}
+              isolationRequired={isolationRequired}
+              isolationStatus={isolationStatus}
+              containerRunning={false}
+            />
 
-      {/* Row 2: Capabilities, Dempster-Shafer Evidence State, Conflict Meter */}
-      <section className="grid grid-cols-1 md:grid-cols-12 gap-4">
-        <div className="md:col-span-5">
-          <CapabilityPanel
-            capabilities={capabilities}
+            <TaskPanel
+              task={task}
+              onRunTask={handleRunNormalTask}
+              isRunning={isRunningTask}
+              activeCapsCount={activeCapsCount}
+            />
+          </div>
+
+          {/* Middle Row: Capabilities & Dempster-Shafer Consensus */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+            <div className="md:col-span-6">
+              <CapabilityPanel
+                capabilities={capabilities}
+                securityState={securityState}
+              />
+            </div>
+            <div className="md:col-span-6">
+              <TrustPanel trust={trust} />
+            </div>
+          </div>
+
+          {/* Bottom Left: Dempster-Shafer Trajectory Chart */}
+          <TrustChart history={trustHistory} />
+        </div>
+
+        {/* ================= RIGHT COLUMN: Live Stream, Reasoning & Audit (5 Cols) ================= */}
+        <div className="xl:col-span-5 flex flex-col space-y-4">
+          {/* Real-time Reference Monitor Interception Stream */}
+          <EventStream events={events} />
+
+          {/* Explainable Revocation / Causal Chain */}
+          <RevocationPanel
+            lastViolationEvent={lastViolationEvent}
             securityState={securityState}
+            trust={trust}
+            revokedCaps={revokedCaps}
           />
-        </div>
-        <div className="md:col-span-5">
-          <TrustPanel trust={trust} />
-        </div>
-        <div className="md:col-span-2">
-          <ConflictMeter conflict={trust?.conflict ?? 0.0} />
-        </div>
-      </section>
 
-      {/* Row 3: Live Security Event Stream */}
-      <section>
-        <EventStream events={events} />
-      </section>
-
-      {/* Row 4: Trust History Chart & Explainable Revocation */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <TrustChart history={trustHistory} />
-        <RevocationPanel
-          lastViolationEvent={lastViolationEvent}
-          securityState={securityState}
-          trust={trust}
-          revokedCaps={revokedCaps}
-        />
-      </section>
-
-      {/* Row 5: Incident Timeline & Provenance Audit */}
-      <section>
-        <IncidentTimeline timeline={timeline} />
-      </section>
+          {/* Incident Timeline & Provenance Audit */}
+          <IncidentTimeline timeline={timeline} />
+        </div>
+      </div>
     </div>
   );
 }
