@@ -12,7 +12,8 @@ import RevocationPanel from '../components/RevocationPanel';
 import IncidentTimeline from '../components/IncidentTimeline';
 import AgentStatus from '../components/AgentStatus';
 import DemoControls from '../components/DemoControls';
-import { Shield, RefreshCw, Cpu, Activity, ShieldCheck, Database, Layers } from 'lucide-react';
+import EventInjectorDrawer from '../components/EventInjectorDrawer';
+import { Shield, RefreshCw, Cpu, Activity, ShieldCheck, Database, Layers, Radio } from 'lucide-react';
 
 export default function Dashboard() {
   const [task, setTask] = useState(null);
@@ -29,6 +30,7 @@ export default function Dashboard() {
   const [wsConnected, setWsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isRunningTask, setIsRunningTask] = useState(false);
+  const [isEventDrawerOpen, setIsEventDrawerOpen] = useState(false);
 
   // Load snapshot from backend via REST
   const loadTaskSnapshot = useCallback(async (taskId) => {
@@ -256,7 +258,7 @@ export default function Dashboard() {
   };
 
   const handleSimulateAttack = async (operation, resource) => {
-    if (!task) return;
+    if (!task) return null;
     try {
       const result = await api.simulateOperation(
         task.agent_id,
@@ -277,8 +279,10 @@ export default function Dashboard() {
       ]);
       setCapabilities(caps);
       setTrust(tr);
+      return result;
     } catch (err) {
       console.error('Simulation failed:', err);
+      return null;
     }
   };
 
@@ -323,6 +327,14 @@ export default function Dashboard() {
         </div>
 
         <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => setIsEventDrawerOpen(true)}
+            className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-900/60 to-cyan-900/60 hover:from-purple-800/80 hover:to-cyan-800/80 border border-cyan-500/40 text-cyan-200 text-xs font-bold transition-all shadow-[0_0_15px_rgba(6,182,212,0.25)] hover:scale-[1.02] cursor-pointer"
+          >
+            <Radio className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+            <span>Attack &amp; Event Injector (16+ Scenarios)</span>
+          </button>
+
           <AgentStatus
             wsConnected={wsConnected}
             securityState={securityState}
@@ -346,6 +358,7 @@ export default function Dashboard() {
         onRunNormalTask={handleRunNormalTask}
         onSimulateAttack={handleSimulateAttack}
         onResetDemo={handleResetDemo}
+        onOpenEventInjector={() => setIsEventDrawerOpen(true)}
         isTaskActive={Boolean(task)}
         isRunning={isRunningTask}
         isCritical={securityState === 'CRITICAL'}
@@ -406,6 +419,15 @@ export default function Dashboard() {
           <IncidentTimeline timeline={timeline} />
         </div>
       </div>
+
+      {/* Slide-over Interactive Attack & Event Injection Console */}
+      <EventInjectorDrawer
+        isOpen={isEventDrawerOpen}
+        onClose={() => setIsEventDrawerOpen(false)}
+        task={task}
+        onSimulateOperation={handleSimulateAttack}
+        isRunning={isRunningTask}
+      />
     </div>
   );
 }

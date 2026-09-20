@@ -16,6 +16,7 @@ import {
   Info,
   CheckCircle2,
   Lock,
+  Radio,
 } from 'lucide-react';
 
 export default function DemoControls({
@@ -23,6 +24,7 @@ export default function DemoControls({
   onRunNormalTask,
   onSimulateAttack,
   onResetDemo,
+  onOpenEventInjector,
   isTaskActive,
   isRunning,
   isCritical,
@@ -125,8 +127,17 @@ export default function DemoControls({
           </div>
         </div>
 
-        {/* Play Demo & Reset Buttons */}
-        <div className="flex items-center gap-3">
+        {/* Play Demo, Open 16+ Library & Reset Buttons */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={onOpenEventInjector}
+            title="Open comprehensive attack & syscall injection library (16+ presets & custom dispatcher)"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold text-cyan-200 bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.2)] transition-all hover:scale-[1.02] cursor-pointer"
+          >
+            <Radio className="w-4 h-4 text-cyan-400 animate-pulse" />
+            <span>Open Attack Injector (16+ Scenarios)</span>
+          </button>
+
           <button
             onClick={runAutoShowcase}
             disabled={autoDemoActive || loadingAction !== null}
