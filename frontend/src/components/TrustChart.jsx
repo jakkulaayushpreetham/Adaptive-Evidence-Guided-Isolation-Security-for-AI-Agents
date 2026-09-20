@@ -78,7 +78,7 @@ export default function TrustChart({ history = [] }) {
               Agent Trust &amp; Suspicion Trajectory
             </h3>
             <div className="text-[11px] text-slate-400">
-              Live Evolution: Compliance (Green) &bull; Suspicion (Red) &bull; Uncertainty (Cyan)
+              Live Evolution: Compliance (Green) • Suspicion (Red) • Uncertainty (Cyan)
             </div>
           </div>
         </div>

@@ -6,38 +6,38 @@ export default function SecurityState({ state, isolationRequired, containerRunni
     switch (state) {
       case 'RESTRICTED':
         return {
-          icon: <ShieldAlert className="w-7 h-7 text-amber-400 drop-shadow-[0_0_12px_rgba(245,158,11,0.8)]" />,
+          icon: <ShieldAlert className="w-6 h-6 text-amber-400" />,
           label: 'RESTRICTED',
-          desc: 'High-risk write & network capabilities revoked. Confined to read-only scope.',
+          desc: 'Write capability revoked • Confined to read-only',
           badgeClass: 'badge-restricted',
           cardClass: 'border-restricted',
           authority: 'PARTIAL REVOCATION (WRITE REVOKED)',
-          glowColor: 'bg-amber-500/15 border-amber-500/40 shadow-[0_0_25px_rgba(245,158,11,0.25)]',
+          glowColor: 'bg-amber-500/15 border-amber-500/40 shadow-sm',
           postureScore: '50%',
           postureColor: 'text-amber-400',
         };
       case 'CRITICAL':
         return {
-          icon: <ShieldX className="w-7 h-7 text-rose-400 drop-shadow-[0_0_15px_rgba(244,63,94,0.9)]" />,
+          icon: <ShieldX className="w-6 h-6 text-rose-400" />,
           label: 'CRITICAL',
-          desc: 'Security threshold breached. Zero-trust fail-closed containment active.',
+          desc: 'Zero-trust fail-closed • Process containment active',
           badgeClass: 'badge-critical',
           cardClass: 'border-critical',
           authority: 'ALL CAPABILITIES REVOKED',
-          glowColor: 'bg-rose-500/20 border-rose-500/50 shadow-[0_0_30px_rgba(244,63,94,0.35)]',
+          glowColor: 'bg-rose-500/20 border-rose-500/50 shadow-sm',
           postureScore: '0%',
           postureColor: 'text-rose-400',
         };
       case 'NORMAL':
       default:
         return {
-          icon: <ShieldCheck className="w-7 h-7 text-emerald-400 drop-shadow-[0_0_12px_rgba(16,185,129,0.8)]" />,
+          icon: <ShieldCheck className="w-6 h-6 text-emerald-400" />,
           label: 'NORMAL',
-          desc: 'Observed runtime operations remain fully compliant within validated scope.',
+          desc: 'Compliant execution • Least-privilege enforced',
           badgeClass: 'badge-normal',
           cardClass: 'border-normal',
           authority: 'TASK LEAST-PRIVILEGE ACTIVE',
-          glowColor: 'bg-emerald-500/15 border-emerald-500/40 shadow-[0_0_25px_rgba(16,185,129,0.2)]',
+          glowColor: 'bg-emerald-500/15 border-emerald-500/40 shadow-sm',
           postureScore: '100%',
           postureColor: 'text-emerald-400',
         };

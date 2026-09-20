@@ -480,17 +480,18 @@ export default function EventInjectorDrawer({
                       : 'bg-slate-900/60 border-white/[0.08] hover:border-sky-500/40'
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-3 mb-1.5">
-                    <div>
-                      <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-1">
                         <span className={`badge-pill ${item.badgeClass} text-[9px]`}>
                           {item.risk}
                         </span>
                         <span className="font-bold text-white text-xs">{item.title}</span>
                       </div>
-                      <p className="text-[11px] text-slate-400 mt-1 leading-snug">
-                        {item.description}
-                      </p>
+                      <div className="text-[11px] font-mono text-slate-300 truncate">
+                        <strong className="text-cyan-400">{item.operation}</strong>{' '}
+                        <span className="text-slate-400">{item.resource}</span>
+                      </div>
                     </div>
 
                     <button
@@ -499,9 +500,9 @@ export default function EventInjectorDrawer({
                       title={`Trigger ${item.operation} on ${item.resource}`}
                       className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer disabled:opacity-40 ${
                         isSafe
-                          ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.3)]'
+                          ? 'bg-emerald-600/90 hover:bg-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.3)]'
                           : isSevere
-                          ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-[0_0_10px_rgba(244,63,94,0.3)]'
+                          ? 'bg-rose-600/90 hover:bg-rose-500 text-white shadow-[0_0_10px_rgba(244,63,94,0.3)]'
                           : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
                       }`}
                     >
@@ -510,19 +511,8 @@ export default function EventInjectorDrawer({
                       ) : (
                         <Zap className="w-3.5 h-3.5 fill-current" />
                       )}
-                      <span>Fire Event</span>
+                      <span>Fire</span>
                     </button>
-                  </div>
-
-                  {/* Operation signature & Expected Outcome */}
-                  <div className="mt-2 pt-2 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-mono">
-                    <div className="text-slate-300 truncate max-w-sm">
-                      <strong className="text-cyan-300">{item.operation}</strong>{' '}
-                      <span className="text-slate-400">{item.resource}</span>
-                    </div>
-                    <div className="text-amber-300/90 text-[10px] italic">
-                      &rarr; {item.expected}
-                    </div>
                   </div>
                 </div>
               );

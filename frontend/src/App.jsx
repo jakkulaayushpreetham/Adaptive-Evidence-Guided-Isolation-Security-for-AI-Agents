@@ -47,7 +47,7 @@ export default function App() {
                 </span>
               </div>
               <div className="text-[10px] text-slate-400 font-medium tracking-wide">
-                Adaptive OS Security Architecture &bull; Dempster-Shafer Trust Kernel
+                Adaptive OS Security Architecture • Dempster-Shafer Trust Kernel
               </div>
             </div>
           </div>
