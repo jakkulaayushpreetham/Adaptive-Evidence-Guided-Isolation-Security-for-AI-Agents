@@ -1,0 +1,6 @@
+scenario,run_id,event_index,event_type,decision,m_t,m_u,m_theta,conflict_k,security_state,active_capability_count
+repeated_violation,99,0,READ_FILE,ALLOW,0.75,0.05,0.2,0.0,NORMAL,2
+repeated_violation,99,1,NETWORK,DENY,0.5872,0.3028,0.1101,0.455,NORMAL,2
+repeated_violation,99,2,NETWORK,DENY,0.2386,0.7293,0.0321,0.4849,RESTRICTED,1
+repeated_violation,99,3,NETWORK,DENY,0.0639,0.9299,0.0062,0.2274,CRITICAL,0
+repeated_violation,99,4,NETWORK,DENY,0.0639,0.9299,0.0062,0.2274,CRITICAL,0

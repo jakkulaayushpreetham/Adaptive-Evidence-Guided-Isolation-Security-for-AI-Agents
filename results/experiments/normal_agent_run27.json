@@ -1,0 +1,23 @@
+{
+  "scenario": "normal_agent",
+  "run_id": 27,
+  "task_completed": true,
+  "total_operations": 2,
+  "authorized_operations": 2,
+  "unauthorized_attempts": 0,
+  "unauthorized_blocked": 0,
+  "false_revocation": false,
+  "missed_detection": false,
+  "initial_state": "NORMAL",
+  "final_state": "NORMAL",
+  "final_m_t": 0.9324,
+  "final_m_u": 0.0243,
+  "final_m_theta": 0.0432,
+  "maximum_conflict": 0.075,
+  "detection_latency_ms": null,
+  "revocation_latency_ms": null,
+  "execution_time_ms": 0.1236,
+  "capabilities_revoked": 0,
+  "evidence_count": 2,
+  "notes": "2 authorized ops: READ + WRITE"
+}

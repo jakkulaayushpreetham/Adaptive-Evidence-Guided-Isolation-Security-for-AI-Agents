@@ -1,0 +1,23 @@
+{
+  "scenario": "unauthorized_network",
+  "run_id": 24,
+  "task_completed": true,
+  "total_operations": 2,
+  "authorized_operations": 1,
+  "unauthorized_attempts": 1,
+  "unauthorized_blocked": 1,
+  "false_revocation": false,
+  "missed_detection": false,
+  "initial_state": "NORMAL",
+  "final_state": "NORMAL",
+  "final_m_t": 0.5872,
+  "final_m_u": 0.3028,
+  "final_m_theta": 0.1101,
+  "maximum_conflict": 0.455,
+  "detection_latency_ms": 0.0305,
+  "revocation_latency_ms": 0.0006,
+  "execution_time_ms": 0.0805,
+  "capabilities_revoked": 0,
+  "evidence_count": 2,
+  "notes": "1 authorized read + 1 unauthorized network probe"
+}

@@ -1,0 +1,23 @@
+{
+  "scenario": "unauthorized_file",
+  "run_id": 4,
+  "task_completed": true,
+  "total_operations": 2,
+  "authorized_operations": 1,
+  "unauthorized_attempts": 1,
+  "unauthorized_blocked": 1,
+  "false_revocation": false,
+  "missed_detection": false,
+  "initial_state": "NORMAL",
+  "final_state": "RESTRICTED",
+  "final_m_t": 0.4974,
+  "final_m_u": 0.3968,
+  "final_m_theta": 0.1058,
+  "maximum_conflict": 0.5275,
+  "detection_latency_ms": 0.0549,
+  "revocation_latency_ms": 0.0007,
+  "execution_time_ms": 0.1068,
+  "capabilities_revoked": 1,
+  "evidence_count": 2,
+  "notes": "1 authorized read + 1 unauthorized private file read"
+}

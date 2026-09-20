@@ -1,0 +1,26 @@
+{
+  "scenario": "normal_agent",
+  "git_commit": "ba17243",
+  "restriction_threshold": 0.6,
+  "critical_threshold": 0.85,
+  "evidence_mapping_version": "v1",
+  "measured_runs": 30,
+  "task_completion_rate": 1.0,
+  "false_revocation_rate": 0.0,
+  "final_state_distribution": {
+    "NORMAL": 30
+  },
+  "mean_final_m_t": 0.9324,
+  "mean_final_m_u": 0.0243,
+  "mean_final_m_theta": 0.0432,
+  "mean_max_conflict": 0.075,
+  "execution_latency": {
+    "n": 30,
+    "mean_ms": 0.1809,
+    "median_ms": 0.1315,
+    "stdev_ms": 0.0899,
+    "min_ms": 0.1084,
+    "max_ms": 0.4165,
+    "p95_ms": 0.3466
+  }
+}

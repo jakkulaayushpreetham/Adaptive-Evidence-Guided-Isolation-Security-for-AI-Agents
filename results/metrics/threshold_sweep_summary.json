@@ -1,0 +1,130 @@
+{
+  "sweep_pairs_evaluated": 29,
+  "restriction_threshold_range": [
+    0.5,
+    0.75
+  ],
+  "critical_threshold_range": [
+    0.75,
+    0.95
+  ],
+  "zero_false_revocation_pairs": [
+    {
+      "restriction": 0.5,
+      "critical": 0.75
+    },
+    {
+      "restriction": 0.5,
+      "critical": 0.8
+    },
+    {
+      "restriction": 0.5,
+      "critical": 0.85
+    },
+    {
+      "restriction": 0.5,
+      "critical": 0.9
+    },
+    {
+      "restriction": 0.5,
+      "critical": 0.95
+    },
+    {
+      "restriction": 0.55,
+      "critical": 0.75
+    },
+    {
+      "restriction": 0.55,
+      "critical": 0.8
+    },
+    {
+      "restriction": 0.55,
+      "critical": 0.85
+    },
+    {
+      "restriction": 0.55,
+      "critical": 0.9
+    },
+    {
+      "restriction": 0.55,
+      "critical": 0.95
+    },
+    {
+      "restriction": 0.6,
+      "critical": 0.75
+    },
+    {
+      "restriction": 0.6,
+      "critical": 0.8
+    },
+    {
+      "restriction": 0.6,
+      "critical": 0.85
+    },
+    {
+      "restriction": 0.6,
+      "critical": 0.9
+    },
+    {
+      "restriction": 0.6,
+      "critical": 0.95
+    },
+    {
+      "restriction": 0.65,
+      "critical": 0.75
+    },
+    {
+      "restriction": 0.65,
+      "critical": 0.8
+    },
+    {
+      "restriction": 0.65,
+      "critical": 0.85
+    },
+    {
+      "restriction": 0.65,
+      "critical": 0.9
+    },
+    {
+      "restriction": 0.65,
+      "critical": 0.95
+    },
+    {
+      "restriction": 0.7,
+      "critical": 0.75
+    },
+    {
+      "restriction": 0.7,
+      "critical": 0.8
+    },
+    {
+      "restriction": 0.7,
+      "critical": 0.85
+    },
+    {
+      "restriction": 0.7,
+      "critical": 0.9
+    },
+    {
+      "restriction": 0.7,
+      "critical": 0.95
+    },
+    {
+      "restriction": 0.75,
+      "critical": 0.8
+    },
+    {
+      "restriction": 0.75,
+      "critical": 0.85
+    },
+    {
+      "restriction": 0.75,
+      "critical": 0.9
+    },
+    {
+      "restriction": 0.75,
+      "critical": 0.95
+    }
+  ],
+  "csv_path": "results\\metrics\\threshold_sweep.csv"
+}

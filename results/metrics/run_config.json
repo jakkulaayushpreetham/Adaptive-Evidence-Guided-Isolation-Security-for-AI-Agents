@@ -1,0 +1,22 @@
+{
+  "timestamp_utc": "2026-09-20T12:37:21.935975+00:00",
+  "git_commit": "ba17243",
+  "evidence_mapping_version": "v1",
+  "docker_verified": false,
+  "restriction_threshold": 0.6,
+  "critical_threshold": 0.85,
+  "high_conflict_threshold": 0.5,
+  "critical_conflict_threshold": 0.8,
+  "warm_up_runs": 5,
+  "measured_runs": 30,
+  "scenarios_evaluated": [
+    "normal_agent",
+    "accidental_violation",
+    "unauthorized_network",
+    "unauthorized_file",
+    "repeated_violation",
+    "severe_violation",
+    "conflicting_evidence"
+  ],
+  "total_experiment_records": 210
+}

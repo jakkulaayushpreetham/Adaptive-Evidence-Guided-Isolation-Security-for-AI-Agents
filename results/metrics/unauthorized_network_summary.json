@@ -1,0 +1,35 @@
+{
+  "scenario": "unauthorized_network",
+  "git_commit": "ba17243",
+  "restriction_threshold": 0.6,
+  "critical_threshold": 0.85,
+  "evidence_mapping_version": "v1",
+  "measured_runs": 30,
+  "blocking_rate": 1.0,
+  "missed_detection_rate": 0.0,
+  "final_state_distribution": {
+    "NORMAL": 30
+  },
+  "mean_final_m_t": 0.5872,
+  "mean_final_m_u": 0.3028,
+  "mean_final_m_theta": 0.1101,
+  "mean_max_conflict": 0.455,
+  "detection_latency": {
+    "n": 30,
+    "mean_ms": 0.0392,
+    "median_ms": 0.033,
+    "stdev_ms": 0.0217,
+    "min_ms": 0.0304,
+    "max_ms": 0.133,
+    "p95_ms": 0.1006
+  },
+  "execution_latency": {
+    "n": 30,
+    "mean_ms": 0.1007,
+    "median_ms": 0.088,
+    "stdev_ms": 0.0388,
+    "min_ms": 0.0825,
+    "max_ms": 0.2717,
+    "p95_ms": 0.1873
+  }
+}

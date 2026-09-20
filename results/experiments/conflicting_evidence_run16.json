@@ -1,0 +1,23 @@
+{
+  "scenario": "conflicting_evidence",
+  "run_id": 16,
+  "task_completed": true,
+  "total_operations": 4,
+  "authorized_operations": 2,
+  "unauthorized_attempts": 2,
+  "unauthorized_blocked": 2,
+  "false_revocation": false,
+  "missed_detection": false,
+  "initial_state": "NORMAL",
+  "final_state": "RESTRICTED",
+  "final_m_t": 0.5826,
+  "final_m_u": 0.3989,
+  "final_m_theta": 0.0185,
+  "maximum_conflict": 0.5779,
+  "detection_latency_ms": 0.121,
+  "revocation_latency_ms": 0.0012,
+  "execution_time_ms": 0.4623,
+  "capabilities_revoked": 1,
+  "evidence_count": 4,
+  "notes": "Alternating auth READ and unauth file access to generate high D-S conflict K"
+}

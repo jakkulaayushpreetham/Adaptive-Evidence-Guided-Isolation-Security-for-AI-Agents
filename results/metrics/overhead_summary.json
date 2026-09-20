@@ -1,0 +1,26 @@
+{
+  "scenario": "overhead_benchmark",
+  "git_commit": "ba17243",
+  "measured_runs": 30,
+  "baseline_latency": {
+    "n": 30,
+    "mean_ms": 0.0005,
+    "median_ms": 0.0004,
+    "stdev_ms": 0.0002,
+    "min_ms": 0.0003,
+    "max_ms": 0.0011,
+    "p95_ms": 0.0011
+  },
+  "aegis_enforced_latency": {
+    "n": 30,
+    "mean_ms": 0.054,
+    "median_ms": 0.0481,
+    "stdev_ms": 0.0154,
+    "min_ms": 0.0462,
+    "max_ms": 0.0935,
+    "p95_ms": 0.0932
+  },
+  "overhead_ms": 0.0535,
+  "overhead_pct": 10287.18,
+  "notes": "Single READ_FILE operation: Baseline (direct check) vs AEGIS SecurityRuntime pipeline"
+}
