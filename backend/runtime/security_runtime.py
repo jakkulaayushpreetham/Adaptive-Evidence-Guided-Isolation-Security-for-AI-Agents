@@ -42,6 +42,7 @@ class SecurityRuntime:
         policy_engine: AdaptivePolicyEngine,
         revocation_controller: RevocationController,
         isolation_manager: IsolationManager | None = None,
+        audit_sink: Any | None = None,
     ) -> None:
         self._reference_monitor = reference_monitor
         self._evidence_mapper = evidence_mapper
@@ -49,6 +50,7 @@ class SecurityRuntime:
         self._policy_engine = policy_engine
         self._revocation_controller = revocation_controller
         self._isolation_manager = isolation_manager
+        self._audit_sink = audit_sink
 
         self._trust_states: dict[tuple[str, str], TrustState] = {}
         self._security_states: dict[
@@ -137,6 +139,25 @@ class SecurityRuntime:
             self._security_states[key] = (
                 decision.proposed_state
             )
+
+            if self._audit_sink is not None:
+                self._audit_sink.record_event(event)
+                self._audit_sink.record_trust_snapshot(agent_id, task_id, trust)
+                if decision.state_changed:
+                    self._audit_sink.record_policy_transition(
+                        agent_id=agent_id,
+                        task_id=task_id,
+                        previous_state=decision.previous_state.name,
+                        new_state=decision.proposed_state.name,
+                        reason=decision.reason,
+                    )
+                for cap in revocation.revoked_capabilities:
+                    self._audit_sink.record_revocation(
+                        capability_id=cap.capability_id,
+                        agent_id=agent_id,
+                        task_id=task_id,
+                        reason=decision.reason,
+                    )
 
             if (
                 revocation.isolation_required
