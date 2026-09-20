@@ -12,7 +12,7 @@ import RevocationPanel from '../components/RevocationPanel';
 import IncidentTimeline from '../components/IncidentTimeline';
 import AgentStatus from '../components/AgentStatus';
 import DemoControls from '../components/DemoControls';
-import { Shield, RefreshCw, Cpu, Activity, ShieldCheck } from 'lucide-react';
+import { Shield, RefreshCw, Cpu, Activity, ShieldCheck, Database, Layers } from 'lucide-react';
 
 export default function Dashboard() {
   const [task, setTask] = useState(null);
@@ -283,46 +283,57 @@ export default function Dashboard() {
   const revokedCaps = capabilities.filter((c) => c.status === 'REVOKED');
 
   return (
-    <div className="min-h-screen bg-[#070a12] text-slate-100 p-4 lg:p-6 flex flex-col space-y-4">
-      {/* Top Header Bar */}
-      <header className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-slate-800/80">
+    <div className="flex flex-col space-y-4">
+      {/* Sleek Sub-Header HUD Bar (Zero Redundancy) */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-1 py-1">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/40 shadow-[0_0_20px_rgba(6,182,212,0.25)] text-cyan-400">
-            <Shield className="w-6 h-6" />
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-white/[0.08] text-xs font-mono">
+            <Database className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="text-slate-400">ACTIVE TASK:</span>
+            <span className="font-bold text-white tracking-wider">
+              {task?.task_id || 'INITIALIZING...'}
+            </span>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-extrabold tracking-tight text-white">
-                AEGIS-AI SOC
-              </h1>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 font-mono font-bold">
-                v1.0-RESEARCH
-              </span>
-            </div>
-            <p className="text-xs text-slate-400">
-              Adaptive OS Security Architecture for Autonomous Agent Execution
-            </p>
+
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-white/[0.08] text-xs font-mono">
+            <span className="text-slate-400">AUTHORITY:</span>
+            <span
+              className={`font-bold ${
+                securityState === 'NORMAL'
+                  ? 'text-emerald-400'
+                  : securityState === 'RESTRICTED'
+                  ? 'text-amber-400'
+                  : 'text-rose-400'
+              }`}
+            >
+              {securityState === 'NORMAL'
+                ? 'LEAST-PRIVILEGE (2 CAPS)'
+                : securityState === 'RESTRICTED'
+                ? 'CONFINED (READ-ONLY)'
+                : 'ISOLATED (ZERO PRIVILEGE)'}
+            </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <AgentStatus
             wsConnected={wsConnected}
             securityState={securityState}
             agentId={task?.agent_id}
           />
+
           <button
             onClick={() => task && loadTaskSnapshot(task.task_id)}
             disabled={isLoading}
-            title="Refresh snapshot from REST API"
-            className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+            title="Synchronize real-time state with backend REST API"
+            className="p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-cyan-300 transition-all cursor-pointer shadow-sm disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-cyan-400' : ''}`} />
           </button>
         </div>
-      </header>
+      </div>
 
-      {/* Top Command Gateway */}
+      {/* Cyber Defense Simulation Deck */}
       <DemoControls
         onCreateDemoTask={handleCreateDemoTask}
         onRunNormalTask={handleRunNormalTask}

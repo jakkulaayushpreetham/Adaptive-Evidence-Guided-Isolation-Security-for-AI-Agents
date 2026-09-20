@@ -39,10 +39,10 @@ export default function AgentDetails({ taskId }) {
           activeCapsCount={capabilities.filter((c) => c.status === 'ACTIVE').length}
         />
 
-        <div className="soc-card">
-          <div className="flex items-center gap-2 mb-3">
+        <div className="glass-panel p-5">
+          <div className="flex items-center gap-2 mb-3 pb-2 border-b border-white/[0.08]">
             <Key className="w-4 h-4 text-emerald-400" />
-            <h3 className="text-sm font-semibold uppercase text-slate-300">Capability Grants</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">Capability Grants</h3>
           </div>
           <div className="space-y-2">
             {capabilities.map((c) => (

@@ -8,6 +8,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  ReferenceLine,
 } from 'recharts';
 import { TrendingUp, Info } from 'lucide-react';
 
@@ -65,10 +66,11 @@ export default function TrustChart({ history = [] }) {
   const latest = chartData[chartData.length - 1] || {};
 
   return (
-    <div className="soc-card flex flex-col h-[320px]">
-      <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
+    <div className="glass-panel flex flex-col h-[320px] p-4">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-2.5 border-b border-white/[0.08]">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+          <div className="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.2)]">
             <TrendingUp className="w-4 h-4" />
           </div>
           <div>
@@ -81,31 +83,32 @@ export default function TrustChart({ history = [] }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 text-xs mono">
+        <div className="flex items-center gap-3 text-xs font-mono">
           <span className="text-slate-400">
             Current: <span className="text-emerald-400 font-bold">m(T)={latest['m(T) Trust']}</span> |{' '}
             <span className="text-rose-400 font-bold">m(U)={latest['m(U) Distrust']}</span>
           </span>
-          <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 text-[10px] font-semibold">
+          <span className="px-2 py-0.5 rounded-lg bg-slate-900 text-slate-300 border border-white/[0.06] text-[10px] font-semibold">
             {history.length} Snapshots
           </span>
         </div>
       </div>
 
+      {/* Chart Canvas */}
       <div className="flex-1 w-full mt-2">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+          <AreaChart data={chartData} margin={{ top: 12, right: 15, left: -25, bottom: 0 }}>
             <defs>
               <linearGradient id="colorTrust" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
+                <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
                 <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
               </linearGradient>
               <linearGradient id="colorDistrust" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.4} />
+                <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.45} />
                 <stop offset="95%" stopColor="#f43f5e" stopOpacity={0.0} />
               </linearGradient>
               <linearGradient id="colorUncertainty" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.25} />
+                <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
                 <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.0} />
               </linearGradient>
             </defs>
@@ -126,15 +129,39 @@ export default function TrustChart({ history = [] }) {
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                backgroundColor: 'rgba(10, 15, 30, 0.95)',
                 borderColor: '#334155',
-                borderRadius: '8px',
+                borderRadius: '10px',
                 fontSize: '11px',
                 fontFamily: 'monospace',
-                boxShadow: '0 8px 25px rgba(0,0,0,0.6)',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.8)',
               }}
             />
             <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '4px' }} />
+
+            {/* Threshold Reference Lines */}
+            <ReferenceLine
+              y={0.6}
+              stroke="#f59e0b"
+              strokeDasharray="4 4"
+              label={{
+                value: 'Restricted (0.60)',
+                fill: '#f59e0b',
+                fontSize: 10,
+                position: 'insideTopRight',
+              }}
+            />
+            <ReferenceLine
+              y={0.85}
+              stroke="#f43f5e"
+              strokeDasharray="4 4"
+              label={{
+                value: 'Critical (0.85)',
+                fill: '#f43f5e',
+                fontSize: 10,
+                position: 'insideTopRight',
+              }}
+            />
 
             <Area
               type="monotone"
