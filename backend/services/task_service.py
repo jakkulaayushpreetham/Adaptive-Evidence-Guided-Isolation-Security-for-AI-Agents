@@ -85,6 +85,8 @@ class TaskService:
         if self.audit_sink:
             self.audit_sink.record_capability_grant(read_cap)
             self.audit_sink.record_capability_grant(write_cap)
+            initial_trust = self.runtime.get_trust_state(agent_id=agent_id, task_id=task_id)
+            self.audit_sink.record_trust_snapshot(agent_id, task_id, initial_trust)
 
         return {
             "task_id": task_model.task_id,
@@ -100,6 +102,11 @@ class TaskService:
             raise KeyError(f"Task not found: {task_id}")
 
         self.task_repo.update_status(task_id, "RUNNING")
+        try:
+            from backend.api.websocket import manager as ws_manager
+            ws_manager.broadcast_sync(ws_manager.create_envelope("TASK_STATUS_CHANGED", task_id, {"task_id": task_id, "status": "RUNNING"}))
+        except Exception:
+            pass
 
         client = AgentClient(
             agent_id=task.agent_id,
@@ -124,6 +131,11 @@ class TaskService:
 
         final_status = "COMPLETED" if result.completed else "FAILED"
         self.task_repo.update_status(task_id, final_status)
+        try:
+            from backend.api.websocket import manager as ws_manager
+            ws_manager.broadcast_sync(ws_manager.create_envelope("TASK_STATUS_CHANGED", task_id, {"task_id": task_id, "status": final_status}))
+        except Exception:
+            pass
 
         return result
 

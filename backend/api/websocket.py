@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timezone
 import json
 from typing import Any
@@ -13,8 +14,10 @@ class WebSocketManager:
 
     def __init__(self) -> None:
         self.active_connections: list[WebSocket] = []
+        self._loop: asyncio.AbstractEventLoop | None = None
 
     async def connect(self, websocket: WebSocket) -> None:
+        self._loop = asyncio.get_running_loop()
         await websocket.accept()
         self.active_connections.append(websocket)
 
@@ -32,6 +35,29 @@ class WebSocketManager:
 
         for dead in disconnected:
             self.disconnect(dead)
+
+    def set_loop(self, loop: asyncio.AbstractEventLoop) -> None:
+        self._loop = loop
+
+    def broadcast_sync(self, message: dict[str, Any]) -> None:
+        if not self.active_connections:
+            return
+        target_loop = self._loop
+        if target_loop is None:
+            try:
+                target_loop = asyncio.get_running_loop()
+            except RuntimeError:
+                return
+
+        if target_loop and target_loop.is_running():
+            try:
+                running = asyncio.get_running_loop()
+                if running is target_loop:
+                    target_loop.create_task(self.broadcast(message))
+                else:
+                    asyncio.run_coroutine_threadsafe(self.broadcast(message), target_loop)
+            except RuntimeError:
+                asyncio.run_coroutine_threadsafe(self.broadcast(message), target_loop)
 
     @staticmethod
     def create_envelope(

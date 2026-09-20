@@ -1,0 +1,138 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+@import "tailwindcss";
+
+:root {
+  --bg-main: #0a0d14;
+  --bg-card: #0f1422;
+  --bg-card-hover: #151c2e;
+  --border-color: #1e293b;
+  --border-glow: #334155;
+  
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-dark: #64748b;
+  
+  --color-normal: #10b981;
+  --color-normal-glow: rgba(16, 185, 129, 0.25);
+  
+  --color-restricted: #f59e0b;
+  --color-restricted-glow: rgba(245, 158, 11, 0.25);
+  
+  --color-critical: #ef4444;
+  --color-critical-glow: rgba(239, 68, 68, 0.35);
+
+  --color-accent: #3b82f6;
+  --color-purple: #8b5cf6;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(30, 41, 59, 0.2) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(15, 23, 42, 0.4) 0%, transparent 40%);
+}
+
+code, pre, .mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Glassmorphism Card Style */
+.soc-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1.25rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.soc-card:hover {
+  border-color: var(--border-glow);
+}
+
+/* State Glows */
+.border-normal {
+  border-color: rgba(16, 185, 129, 0.5) !important;
+  box-shadow: 0 0 15px var(--color-normal-glow);
+}
+
+.border-restricted {
+  border-color: rgba(245, 158, 11, 0.5) !important;
+  box-shadow: 0 0 15px var(--color-restricted-glow);
+}
+
+.border-critical {
+  border-color: rgba(239, 68, 68, 0.7) !important;
+  box-shadow: 0 0 20px var(--color-critical-glow);
+  animation: pulse-critical 2s infinite;
+}
+
+@keyframes pulse-critical {
+  0% { box-shadow: 0 0 15px var(--color-critical-glow); }
+  50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.6); }
+  100% { box-shadow: 0 0 15px var(--color-critical-glow); }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0b0f19;
+}
+::-webkit-scrollbar-thumb {
+  background: #223048;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334566;
+}
+
+/* Badge styles */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-normal {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.badge-restricted {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.badge-critical {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.badge-muted {
+  background: rgba(148, 163, 184, 0.1);
+  color: var(--text-muted);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}

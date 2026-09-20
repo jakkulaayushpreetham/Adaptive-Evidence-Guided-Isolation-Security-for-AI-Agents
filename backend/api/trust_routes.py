@@ -37,3 +37,23 @@ def get_trust_state(task_id: str, db: Session = Depends(get_db)):
         "conflict": snapshot.conflict_K,
         "evidence_count": snapshot.evidence_count,
     }
+
+
+@router.get("/task/{task_id}/history")
+def get_trust_history(task_id: str, db: Session = Depends(get_db)):
+    trust_repo = TrustRepository(db)
+    snapshots = trust_repo.list_snapshots(task_id)
+    return [
+        {
+            "id": s.id,
+            "agent_id": s.agent_id,
+            "task_id": s.task_id,
+            "m_T": s.m_T,
+            "m_U": s.m_U,
+            "m_Theta": s.m_Theta,
+            "conflict_K": s.conflict_K,
+            "evidence_count": s.evidence_count,
+            "timestamp": s.timestamp.isoformat(),
+        }
+        for s in snapshots
+    ]

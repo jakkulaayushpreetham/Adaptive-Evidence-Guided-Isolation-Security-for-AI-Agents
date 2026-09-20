@@ -159,15 +159,25 @@ class SecurityRuntime:
                         reason=decision.reason,
                     )
 
-            if (
-                revocation.isolation_required
-                and self._isolation_manager is not None
-            ):
-                self._isolation_manager.isolate(
-                    agent_id=agent_id,
-                    task_id=task_id,
-                    reason=decision.reason,
-                )
+            if revocation.isolation_required:
+                try:
+                    from backend.api.websocket import manager as ws_manager
+                    envelope = ws_manager.create_envelope("AGENT_ISOLATED", task_id, {
+                        "agent_id": agent_id,
+                        "task_id": task_id,
+                        "reason": decision.reason,
+                        "status": "ISOLATION_REQUESTED",
+                    })
+                    ws_manager.broadcast_sync(envelope)
+                except Exception:
+                    pass
+
+                if self._isolation_manager is not None:
+                    self._isolation_manager.isolate(
+                        agent_id=agent_id,
+                        task_id=task_id,
+                        reason=decision.reason,
+                    )
 
             return RuntimeResult(
                 authorization=authorization,
