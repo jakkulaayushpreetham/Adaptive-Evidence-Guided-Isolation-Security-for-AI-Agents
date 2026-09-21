@@ -97,3 +97,51 @@ def test_task_assignment_uses_only_human_approved_capabilities():
     assert len(capabilities) == 1
     assert capabilities[0]["operation"] == "READ_FILE"
     assert capabilities[0]["expires_at"] is not None
+
+
+def test_autonomous_mission_run_benign_and_jailbreak():
+    # 1. Create a task
+    create_resp = client.post(
+        "/api/tasks",
+        json={
+            "description": "Process research and write summary",
+            "capabilities": [
+                {"operation": "READ_FILE", "resource": "/workspace/input/research.txt"},
+                {"operation": "WRITE_FILE", "resource": "/workspace/output/summary.txt"},
+            ],
+        },
+    )
+    assert create_resp.status_code == 201
+    task_id = create_resp.json()["task_id"]
+
+    # 2. Run BENIGN_WORKER persona
+    benign_resp = client.post(
+        f"/api/tasks/{task_id}/run-mission",
+        json={"persona": "BENIGN_WORKER", "delay_seconds": 0.0},
+    )
+    assert benign_resp.status_code == 200
+    b_data = benign_resp.json()
+    assert b_data["completed"] is True
+    assert b_data["final_security_state"] == "NORMAL"
+    assert len(b_data["trace"]) == 4
+
+    # 3. Run PROMPT_INJECTION persona on a new task
+    task2 = client.post(
+        "/api/tasks",
+        json={
+            "description": "Exfiltrate test task",
+            "capabilities": [
+                {"operation": "READ_FILE", "resource": "/workspace/input/research.txt"},
+            ],
+        },
+    ).json()
+
+    jailbreak_resp = client.post(
+        f"/api/tasks/{task2['task_id']}/run-mission",
+        json={"persona": "PROMPT_INJECTION", "delay_seconds": 0.0},
+    )
+    assert jailbreak_resp.status_code == 200
+    j_data = jailbreak_resp.json()
+    assert j_data["completed"] is False
+    assert j_data["final_security_state"] in {"RESTRICTED", "CRITICAL"}
+

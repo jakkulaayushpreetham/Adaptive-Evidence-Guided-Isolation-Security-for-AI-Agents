@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from backend.database.database import get_db
@@ -78,6 +79,54 @@ def run_task(
             "completed": result.completed,
             "executed_actions": result.executed_actions,
             "error": result.error,
+        }
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+
+class MissionRequest(BaseModel):
+    persona: str = "BENIGN_WORKER"
+    delay_seconds: float = 0.4
+
+
+@router.post("/{task_id}/run-mission")
+def run_autonomous_mission(
+    task_id: str,
+    request: MissionRequest,
+    service: TaskService = Depends(get_task_service),
+):
+    try:
+        res = service.run_mission(
+            task_id=task_id,
+            persona_str=request.persona,
+            delay_seconds=request.delay_seconds,
+        )
+        return {
+            "persona": res.persona.value,
+            "agent_id": res.agent_id,
+            "task_id": res.task_id,
+            "total_steps": res.total_steps,
+            "completed": res.completed,
+            "final_security_state": res.final_security_state,
+            "trace": [
+                {
+                    "step_number": s.step_number,
+                    "thought": s.thought,
+                    "operation": s.operation,
+                    "resource": s.resource,
+                    "allowed": s.allowed,
+                    "decision": s.decision,
+                    "reason": s.reason,
+                    "security_state": s.security_state,
+                    "trustworthy": s.trustworthy,
+                    "untrustworthy": s.untrustworthy,
+                    "uncertainty": s.uncertainty,
+                    "conflict": s.conflict,
+                    "isolation_required": s.isolation_required,
+                    "canary_tripped": s.canary_tripped,
+                }
+                for s in res.trace
+            ],
         }
     except KeyError:
         raise HTTPException(status_code=404, detail="Task not found")

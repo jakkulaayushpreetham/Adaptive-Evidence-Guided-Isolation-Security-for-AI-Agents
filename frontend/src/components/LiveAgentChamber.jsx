@@ -134,9 +134,9 @@ export default function LiveAgentChamber({
   activePipelineStage: externalStage,
   onUpdatePipeline,
 }) {
-  const [chamberMode, setChamberMode] = useState('scheduler'); // 'scheduler' | 'missions'
-  const [isCliOpen, setIsCliOpen] = useState(false); // Agent Shell CLI is hidden by default and opened only on demand!
-  const [selectedMission, setSelectedMission] = useState(MISSIONS[2]); // Default to Mission 3 (Revocation)
+  const [chamberMode, setChamberMode] = useState('missions'); // Default to autonomous missions!
+  const [isCliOpen, setIsCliOpen] = useState(false);
+  const [selectedMission, setSelectedMission] = useState(MISSIONS[0]); // Default to Mission 1 (Legitimate)
   const [terminalLogs, setTerminalLogs] = useState([
     {
       time: '00:00:01',

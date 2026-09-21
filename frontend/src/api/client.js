@@ -34,6 +34,10 @@ export const api = {
   }),
   getTask: (taskId) => fetchJson(`${API_BASE}/tasks/${taskId}`),
   runTask: (taskId) => fetchJson(`${API_BASE}/tasks/${taskId}/run`, { method: 'POST' }),
+  runMission: (taskId, persona = 'BENIGN_WORKER', delaySeconds = 0.4) => fetchJson(`${API_BASE}/tasks/${taskId}/run-mission`, {
+    method: 'POST',
+    body: JSON.stringify({ persona, delay_seconds: delaySeconds }),
+  }),
   getCapabilities: (taskId) => fetchJson(`${API_BASE}/tasks/${taskId}/capabilities`),
   getTrustState: (taskId) => fetchJson(`${API_BASE}/tasks/${taskId}/trust`),
   getTrustHistory: (taskId) => fetchJson(`${API_BASE}/trust/task/${taskId}/history`),

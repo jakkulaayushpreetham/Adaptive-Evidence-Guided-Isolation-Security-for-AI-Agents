@@ -276,8 +276,11 @@ export default function Dashboard() {
     }
   };
 
-  const handleSimulateAttack = async (operation, resource) => {
+  const handleSimulateAttack = async (operationOrObj, resourceStr) => {
     if (!task) return null;
+    const operation = typeof operationOrObj === 'object' && operationOrObj !== null ? operationOrObj.operation : operationOrObj;
+    const resource = typeof operationOrObj === 'object' && operationOrObj !== null ? operationOrObj.resource : resourceStr;
+
     handleUpdatePipeline('REF_MONITOR', {
       operation,
       resource,

@@ -171,6 +171,44 @@ class TaskService:
 
         return result
 
+    def run_mission(
+        self,
+        task_id: str,
+        persona_str: str = "BENIGN_WORKER",
+        delay_seconds: float = 0.4,
+    ) -> Any:
+        task = self.task_repo.get(task_id)
+        if not task:
+            raise KeyError(f"Task not found: {task_id}")
+
+        from agent.autonomous_runner import AgentPersona, AutonomousMissionRunner
+        from backend.api.websocket import manager as ws_manager
+
+        try:
+            persona = AgentPersona(persona_str.upper())
+        except ValueError:
+            persona = AgentPersona.BENIGN_WORKER
+
+        def on_step(step_data: dict):
+            try:
+                ws_manager.broadcast_sync(
+                    ws_manager.create_envelope("MISSION_STEP", task_id, step_data)
+                )
+            except Exception:
+                pass
+
+        runner = AutonomousMissionRunner(
+            runtime=self.runtime,
+            step_callback=on_step,
+        )
+
+        return runner.run_mission(
+            agent_id=task.agent_id,
+            task_id=task.task_id,
+            persona=persona,
+            step_delay_seconds=delay_seconds,
+        )
+
     def get_task(self, task_id: str) -> dict | None:
         task = self.task_repo.get(task_id)
         if not task:
