@@ -258,6 +258,112 @@ class TaskService:
             })
         return capability_responses
 
+    def grant_capability(
+        self,
+        task_id: str,
+        operation: str,
+        resource: str,
+        lifetime_seconds: int | None = 900,
+    ) -> dict:
+        task = self.task_repo.get(task_id)
+        if not task:
+            raise KeyError(f"Task not found: {task_id}")
+
+        validator = PolicyValidator()
+        proposal = validator.validate(
+            CapabilityProposal(
+                operation=Operation(operation),
+                resource=resource,
+            )
+        )
+        expires_at = (
+            datetime.now(timezone.utc) + timedelta(seconds=lifetime_seconds)
+            if lifetime_seconds is not None
+            else None
+        )
+        cap = self.capability_manager.grant(
+            agent_id=task.agent_id,
+            task_id=task_id,
+            operation=proposal.operation,
+            resource=proposal.resource,
+            expires_at=expires_at,
+        )
+
+        if self.audit_sink:
+            self.audit_sink.record_capability_grant(cap)
+        else:
+            self.cap_repo.create(
+                capability_id=cap.capability_id,
+                agent_id=cap.agent_id,
+                task_id=cap.task_id,
+                operation=cap.operation.value,
+                resource=cap.resource,
+                expires_at=cap.expires_at,
+            )
+
+        try:
+            from backend.api.websocket import manager as ws_manager
+            ws_manager.broadcast_sync(
+                ws_manager.create_envelope(
+                    "CAPABILITY_GRANTED",
+                    task_id,
+                    {
+                        "capability_id": cap.capability_id,
+                        "agent_id": cap.agent_id,
+                        "task_id": cap.task_id,
+                        "operation": cap.operation.value,
+                        "resource": cap.resource,
+                        "status": "ACTIVE",
+                        "created_at": cap.created_at,
+                        "expires_at": cap.expires_at,
+                    },
+                )
+            )
+        except Exception:
+            pass
+
+        return {
+            "capability_id": cap.capability_id,
+            "agent_id": cap.agent_id,
+            "task_id": cap.task_id,
+            "operation": cap.operation.value,
+            "resource": cap.resource,
+            "status": "ACTIVE",
+            "created_at": cap.created_at,
+            "expires_at": cap.expires_at,
+        }
+
+    def revoke_capability(self, task_id: str, capability_id: str, reason: str = "Manual operator revocation") -> None:
+        task = self.task_repo.get(task_id)
+        if not task:
+            raise KeyError(f"Task not found: {task_id}")
+        self.capability_manager.revoke(capability_id, reason=reason)
+
+        if self.audit_sink:
+            self.audit_sink.record_revocation(
+                capability_id=capability_id,
+                agent_id=task.agent_id,
+                task_id=task_id,
+                reason=reason,
+            )
+        else:
+            self.cap_repo.record_revocation(capability_id=capability_id, reason=reason)
+
+        try:
+            from backend.api.websocket import manager as ws_manager
+            ws_manager.broadcast_sync(
+                ws_manager.create_envelope(
+                    "CAPABILITY_REVOKED",
+                    task_id,
+                    {
+                        "capability_id": capability_id,
+                        "reason": reason,
+                    },
+                )
+            )
+        except Exception:
+            pass
+
     def get_trust(self, task_id: str) -> dict | None:
         task = self.task_repo.get(task_id)
         if not task:

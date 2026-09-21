@@ -39,6 +39,13 @@ export const api = {
     body: JSON.stringify({ persona, delay_seconds: delaySeconds }),
   }),
   getCapabilities: (taskId) => fetchJson(`${API_BASE}/tasks/${taskId}/capabilities`),
+  grantCapability: (taskId, { operation, resource, lifetime_seconds = 900 }) => fetchJson(`${API_BASE}/tasks/${taskId}/capabilities`, {
+    method: 'POST',
+    body: JSON.stringify({ operation, resource, lifetime_seconds }),
+  }),
+  revokeCapability: (taskId, capabilityId) => fetchJson(`${API_BASE}/tasks/${taskId}/capabilities/${capabilityId}`, {
+    method: 'DELETE',
+  }),
   getTrustState: (taskId) => fetchJson(`${API_BASE}/tasks/${taskId}/trust`),
   getTrustHistory: (taskId) => fetchJson(`${API_BASE}/trust/task/${taskId}/history`),
   getEvents: (taskId) => fetchJson(`${API_BASE}/tasks/${taskId}/events`),

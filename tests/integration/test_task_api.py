@@ -145,3 +145,42 @@ def test_autonomous_mission_run_benign_and_jailbreak():
     assert j_data["completed"] is False
     assert j_data["final_security_state"] in {"RESTRICTED", "CRITICAL"}
 
+
+def test_dynamic_grant_and_revoke_capabilities_api():
+    # 1. Create task
+    task = client.post(
+        "/api/tasks",
+        json={"description": "Dynamic grant test task"},
+    ).json()
+    task_id = task["task_id"]
+
+    # 2. Grant DATABASE_QUERY capability
+    grant_resp = client.post(
+        f"/api/tasks/{task_id}/capabilities",
+        json={
+            "operation": "DATABASE_QUERY",
+            "resource": "db://infrastructure/iam_roles",
+            "lifetime_seconds": 600,
+        },
+    )
+    assert grant_resp.status_code == 201
+    cap_data = grant_resp.json()
+    assert cap_data["operation"] == "DATABASE_QUERY"
+    assert cap_data["resource"] == "db://infrastructure/iam_roles"
+    assert cap_data["status"] == "ACTIVE"
+
+    # 3. Verify it is listed in capabilities
+    caps = client.get(f"/api/tasks/{task_id}/capabilities").json()
+    assert any(c["operation"] == "DATABASE_QUERY" and c["resource"] == "db://infrastructure/iam_roles" for c in caps)
+
+    # 4. Revoke capability
+    cap_id = cap_data["capability_id"]
+    rev_resp = client.delete(f"/api/tasks/{task_id}/capabilities/{cap_id}")
+    assert rev_resp.status_code == 200
+
+    # 5. Verify it is now revoked
+    caps_after = client.get(f"/api/tasks/{task_id}/capabilities").json()
+    revoked_cap = next(c for c in caps_after if c["capability_id"] == cap_id)
+    assert revoked_cap["status"] == "REVOKED"
+
+

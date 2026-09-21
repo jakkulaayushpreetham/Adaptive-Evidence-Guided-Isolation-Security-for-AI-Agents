@@ -531,6 +531,8 @@ export default function Dashboard() {
               <CapabilityPanel
                 capabilities={capabilities}
                 securityState={securityState}
+                taskId={task?.task_id}
+                onRefresh={() => task?.task_id && loadTaskSnapshot(task.task_id)}
               />
             </div>
             <div className="md:col-span-6">

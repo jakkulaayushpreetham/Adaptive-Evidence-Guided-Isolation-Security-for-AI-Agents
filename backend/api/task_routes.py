@@ -7,7 +7,14 @@ from sqlalchemy.orm import Session
 from backend.database.database import get_db
 from backend.schemas.capability_schema import CapabilityResponse
 from backend.schemas.event_schema import SecurityEventResponse
-from backend.schemas.task_schema import TaskAnalysisRequest, TaskAnalysisResponse, TaskCreateRequest, TaskResponse, TaskRunResponse
+from backend.schemas.task_schema import (
+    CapabilityGrantRequest,
+    TaskAnalysisRequest,
+    TaskAnalysisResponse,
+    TaskCreateRequest,
+    TaskResponse,
+    TaskRunResponse,
+)
 from backend.schemas.trust_schema import TrustStateResponse
 from backend.services.security_service import get_security_service
 from backend.services.task_analyzer_service import TaskAnalyzerService
@@ -139,6 +146,38 @@ def get_task_capabilities(
     service: TaskService = Depends(get_task_service),
 ):
     return service.get_capabilities(task_id)
+
+
+@router.post("/{task_id}/capabilities", response_model=CapabilityResponse, status_code=status.HTTP_201_CREATED)
+def grant_task_capability(
+    task_id: str,
+    request: CapabilityGrantRequest,
+    service: TaskService = Depends(get_task_service),
+):
+    try:
+        return service.grant_capability(
+            task_id=task_id,
+            operation=request.operation,
+            resource=request.resource,
+            lifetime_seconds=request.lifetime_seconds,
+        )
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Task not found")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.delete("/{task_id}/capabilities/{capability_id}")
+def revoke_task_capability(
+    task_id: str,
+    capability_id: str,
+    service: TaskService = Depends(get_task_service),
+):
+    try:
+        service.revoke_capability(task_id=task_id, capability_id=capability_id)
+        return {"status": "REVOKED", "capability_id": capability_id}
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Task or capability not found")
 
 
 @router.get("/{task_id}/trust", response_model=TrustStateResponse)
