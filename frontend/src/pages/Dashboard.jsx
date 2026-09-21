@@ -13,7 +13,9 @@ import IncidentTimeline from '../components/IncidentTimeline';
 import AgentStatus from '../components/AgentStatus';
 import DemoControls from '../components/DemoControls';
 import EventInjectorDrawer from '../components/EventInjectorDrawer';
-import { Shield, RefreshCw, Cpu, Activity, ShieldCheck, Database, Layers, Radio } from 'lucide-react';
+import LiveAgentChamber from '../components/LiveAgentChamber';
+import StickyPipelineFlow from '../components/StickyPipelineFlow';
+import { Shield, RefreshCw, Cpu, Activity, ShieldCheck, Database, Layers, Radio, Brain, Zap } from 'lucide-react';
 
 export default function Dashboard() {
   const [task, setTask] = useState(null);
@@ -31,6 +33,16 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [isRunningTask, setIsRunningTask] = useState(false);
   const [isEventDrawerOpen, setIsEventDrawerOpen] = useState(false);
+  const [activeConsoleMode, setActiveConsoleMode] = useState('chamber'); // 'chamber' | 'deck'
+
+  // Master Sticky Pipeline Flow State (Visible throughout page scroll)
+  const [pipelineStage, setPipelineStage] = useState('IDLE');
+  const [stageDetail, setStageDetail] = useState(null);
+
+  const handleUpdatePipeline = (stage, detail = null) => {
+    setPipelineStage(stage);
+    if (detail !== undefined) setStageDetail(detail);
+  };
 
   // Load snapshot from backend via REST
   const loadTaskSnapshot = useCallback(async (taskId) => {
@@ -74,7 +86,7 @@ export default function Dashboard() {
     }
   }, []);
 
-  // Initialize or restore active task with auto-healing
+  // Restore an explicitly assigned task. New tasks begin in the LLM review flow.
   const initializeTask = useCallback(async () => {
     const savedTaskId = localStorage.getItem('aegis_active_task_id');
     if (savedTaskId) {
@@ -86,16 +98,6 @@ export default function Dashboard() {
       }
     }
 
-    try {
-      const newTask = await api.createTask(
-        'Summarize internal research documents and output security analysis posture.'
-      );
-      localStorage.setItem('aegis_active_task_id', newTask.task_id);
-      setTask(newTask);
-      await loadTaskSnapshot(newTask.task_id);
-    } catch (err) {
-      console.error('Failed to initialize task:', err);
-    }
   }, [loadTaskSnapshot]);
 
   useEffect(() => {
@@ -244,6 +246,23 @@ export default function Dashboard() {
     }
   };
 
+  const handleAssignPlannedTask = async (description, capabilities) => {
+    setIsLoading(true);
+    try {
+      const newTask = await api.createTask(description, capabilities);
+      localStorage.setItem('aegis_active_task_id', newTask.task_id);
+      setTask(newTask);
+      setSecurityState('NORMAL');
+      setIsolationRequired(false);
+      setIsolationStatus(null);
+      setLastViolationEvent(null);
+      await loadTaskSnapshot(newTask.task_id);
+      return newTask;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleRunNormalTask = async () => {
     if (!task) return;
     try {
@@ -259,6 +278,11 @@ export default function Dashboard() {
 
   const handleSimulateAttack = async (operation, resource) => {
     if (!task) return null;
+    handleUpdatePipeline('REF_MONITOR', {
+      operation,
+      resource,
+      message: `[HOT-PATH INTERCEPT] Trapping syscall: ${operation}("${resource}"). Validating cryptographic capability token...`,
+    });
     try {
       const result = await api.simulateOperation(
         task.agent_id,
@@ -273,20 +297,70 @@ export default function Dashboard() {
         setIsolationStatus('REQUESTED');
       }
 
-      const [caps, tr] = await Promise.all([
-        api.getCapabilities(task.task_id),
-        api.getTrustState(task.task_id),
-      ]);
-      setCapabilities(caps);
-      setTrust(tr);
+      if (result.allowed) {
+        handleUpdatePipeline('ALLOW', {
+          operation,
+          resource,
+          message: `[KERNEL APPROVAL] Reference Monitor APPROVED ${operation}("${resource}"). Validated by least-privilege token.`,
+        });
+      } else {
+        handleUpdatePipeline('DENY', {
+          operation,
+          resource,
+          message: `[SECURITY VIOLATION] Hot-path monitor BLOCKED ${operation}("${resource}")! Access denied by capability scope.`,
+        });
+      }
+
+      setTimeout(() => {
+        handleUpdatePipeline('DS_FUSION', {
+          message: `[DEMPSTER-SHAFER FUSION] Fused sensor mass: m(U)=${((result?.untrustworthy || 0) * 100).toFixed(1)}%, Conflict K=${(result?.conflict || 0).toFixed(3)}. Consensus updated.`,
+        });
+      }, 500);
+
+      setTimeout(() => {
+        handleUpdatePipeline('POLICY_ENGINE', {
+          message:
+            result.security_state === 'RESTRICTED'
+              ? '[DYNAMIC REVOCATION] Threshold exceeded! Policy Engine transitioned state to RESTRICTED. WRITE_FILE revoked in real time!'
+              : result.security_state === 'CRITICAL'
+              ? '[CRITICAL CONTAINMENT] Multi-violation detected! Zero-trust container lockdown activated!'
+              : '[POLICY STATUS] Adaptive policy verified state remains NORMAL. Scoped execution intact.',
+        });
+      }, 1100);
+
+      setTimeout(() => {
+        handleUpdatePipeline('IDLE');
+      }, 3500);
+
+      const [capsData, trustData, historyData, eventsData, timelineData] =
+        await Promise.allSettled([
+          api.getCapabilities(task.task_id),
+          api.getTrustState(task.task_id),
+          api.getTrustHistory(task.task_id),
+          api.getEvents(task.task_id),
+          api.getTimeline(task.task_id),
+        ]);
+
+      if (capsData.status === 'fulfilled') setCapabilities(capsData.value || []);
+      if (trustData.status === 'fulfilled' && trustData.value) setTrust(trustData.value);
+      if (historyData.status === 'fulfilled' && Array.isArray(historyData.value)) {
+        setTrustHistory(historyData.value);
+      }
+      if (eventsData.status === 'fulfilled') setEvents(eventsData.value || []);
+      if (timelineData.status === 'fulfilled') setTimeline(timelineData.value || []);
+
       return result;
     } catch (err) {
       console.error('Simulation failed:', err);
+      handleUpdatePipeline('IDLE');
       return null;
     }
   };
 
   const handleResetDemo = async () => {
+    handleUpdatePipeline('IDLE', {
+      message: 'Rebooting agent sandbox. Resetting capabilities to pristine least-privilege token.',
+    });
     await handleCreateDemoTask();
   };
 
@@ -294,10 +368,49 @@ export default function Dashboard() {
   const revokedCaps = capabilities.filter((c) => c.status === 'REVOKED');
 
   return (
-    <div className="flex flex-col space-y-4">
-      {/* Sleek Sub-Header HUD Bar (Zero Redundancy) */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-1 py-1">
-        <div className="flex items-center gap-3">
+    <div className="command-stage flex flex-col space-y-4">
+      <section className="dashboard-intro flex flex-col xl:flex-row xl:items-end justify-between gap-4 px-1 pt-1">
+        <div>
+          <div className="flex items-center gap-2 mb-2 text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-400">
+            <span className="h-px w-7 bg-cyan-400/70" /> System overview
+          </div>
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-[-0.045em] text-white">Security posture <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-400">at a glance.</span></h1>
+          <p className="mt-1.5 text-sm text-slate-400 max-w-2xl">Monitor agent activity, permissions, and policy decisions from one place. Every event is recorded for review.</p>
+        </div>
+        <div className="flex items-center gap-3 text-xs font-mono text-slate-400 rounded-xl border border-white/[0.08] bg-slate-950/35 px-3.5 py-2.5">
+          <span className={`h-2 w-2 rounded-full ${wsConnected ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,.85)]' : 'bg-amber-400'}`} />
+          <span>{wsConnected ? 'Telemetry connected' : 'Connecting telemetry'}</span>
+        </div>
+      </section>
+      {/* Sleek Sub-Header HUD Bar (Console Switcher & System Telemetry) */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-1 py-0.5">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Console Mode Switcher */}
+          <div className="flex items-center bg-slate-900/90 p-0.5 rounded-xl border border-white/[0.08] shadow-inner">
+            <button
+              onClick={() => setActiveConsoleMode('chamber')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                activeConsoleMode === 'chamber'
+                  ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_0_12px_rgba(6,182,212,0.4)]'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Brain className="w-3.5 h-3.5" />
+              <span>Live Agent Sandbox</span>
+            </button>
+            <button
+              onClick={() => setActiveConsoleMode('deck')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                activeConsoleMode === 'deck'
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(168,85,247,0.4)]'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Zap className="w-3.5 h-3.5" />
+              <span>Scenario Deck</span>
+            </button>
+          </div>
+
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-white/[0.08] text-xs font-mono">
             <Database className="w-3.5 h-3.5 text-cyan-400" />
             <span className="text-slate-400">ACTIVE TASK:</span>
@@ -332,7 +445,7 @@ export default function Dashboard() {
             className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-900/60 to-cyan-900/60 hover:from-purple-800/80 hover:to-cyan-800/80 border border-cyan-500/40 text-cyan-200 text-xs font-bold transition-all shadow-[0_0_15px_rgba(6,182,212,0.25)] hover:scale-[1.02] cursor-pointer"
           >
             <Radio className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-            <span>Attack &amp; Event Injector (16+ Scenarios)</span>
+            <span>Attack Injector (16+ Scenarios)</span>
           </button>
 
           <AgentStatus
@@ -352,17 +465,40 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Cyber Defense Simulation Deck */}
-      <DemoControls
-        onCreateDemoTask={handleCreateDemoTask}
-        onRunNormalTask={handleRunNormalTask}
-        onSimulateAttack={handleSimulateAttack}
-        onResetDemo={handleResetDemo}
-        onOpenEventInjector={() => setIsEventDrawerOpen(true)}
-        isTaskActive={Boolean(task)}
-        isRunning={isRunningTask}
-        isCritical={securityState === 'CRITICAL'}
+      {/* ================= MASTER STICKY KERNEL DEFENSE PIPELINE FLOW (Visible even when scrolling down) ================= */}
+      <StickyPipelineFlow
+        activeStage={pipelineStage}
+        stageDetail={stageDetail}
+        securityState={securityState}
+        trust={trust}
       />
+
+      {/* Flagship Interactive Engine: Live Autonomous Agent Chamber OR Scenario Deck */}
+      {activeConsoleMode === 'chamber' ? (
+        <LiveAgentChamber
+          task={task}
+          onAssignPlannedTask={handleAssignPlannedTask}
+          onSimulateOperation={handleSimulateAttack}
+          onRunNormalTask={handleRunNormalTask}
+          onResetDemo={handleResetDemo}
+          onOpenEventInjector={() => setIsEventDrawerOpen(true)}
+          securityState={securityState}
+          trust={trust}
+          activePipelineStage={pipelineStage}
+          onUpdatePipeline={handleUpdatePipeline}
+        />
+      ) : (
+        <DemoControls
+          onCreateDemoTask={handleCreateDemoTask}
+          onRunNormalTask={handleRunNormalTask}
+          onSimulateAttack={handleSimulateAttack}
+          onResetDemo={handleResetDemo}
+          onOpenEventInjector={() => setIsEventDrawerOpen(true)}
+          isTaskActive={Boolean(task)}
+          isRunning={isRunningTask}
+          isCritical={securityState === 'CRITICAL'}
+        />
+      )}
 
       {/* High-Impact 2-Column Responsive Command Center Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">

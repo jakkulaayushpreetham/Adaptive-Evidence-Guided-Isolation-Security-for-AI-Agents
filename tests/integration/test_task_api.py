@@ -72,3 +72,28 @@ def test_task_api_lifecycle(tmp_path: Path):
     assert timeline_resp.status_code == 200
     timeline = timeline_resp.json()
     assert len(timeline) >= 2
+
+
+def test_task_assignment_uses_only_human_approved_capabilities():
+    response = client.post(
+        "/api/tasks",
+        json={
+            "description": "Read the approved research input only",
+            "capabilities": [
+                {
+                    "operation": "READ_FILE",
+                    "resource": "/workspace/input/research.txt",
+                    "lifetime_seconds": 300,
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 201
+    task = response.json()
+    assert task["status"] == "ASSIGNED"
+
+    capabilities = client.get(f"/api/tasks/{task['task_id']}/capabilities").json()
+    assert len(capabilities) == 1
+    assert capabilities[0]["operation"] == "READ_FILE"
+    assert capabilities[0]["expires_at"] is not None

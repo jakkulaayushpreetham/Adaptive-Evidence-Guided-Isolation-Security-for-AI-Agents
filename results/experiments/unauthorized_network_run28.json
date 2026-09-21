@@ -14,9 +14,9 @@
   "final_m_u": 0.3028,
   "final_m_theta": 0.1101,
   "maximum_conflict": 0.455,
-  "detection_latency_ms": 0.0308,
-  "revocation_latency_ms": 0.0005,
-  "execution_time_ms": 0.0813,
+  "detection_latency_ms": 0.0979,
+  "revocation_latency_ms": 0.0017,
+  "execution_time_ms": 0.2393,
   "capabilities_revoked": 0,
   "evidence_count": 2,
   "notes": "1 authorized read + 1 unauthorized network probe"

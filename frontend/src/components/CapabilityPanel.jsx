@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, XCircle, AlertTriangle, Key, FileText, PenTool, Globe, Terminal, ShieldAlert } from 'lucide-react';
+import { Key, FileText, PenTool, Globe, Terminal, ShieldAlert, Clock } from 'lucide-react';
 
 export default function CapabilityPanel({ capabilities = [], securityState }) {
   const operations = [
@@ -15,9 +15,12 @@ export default function CapabilityPanel({ capabilities = [], securityState }) {
       return { status: 'DENIED_BY_DEFAULT', badge: 'DENIED (NO CAP)', isGranted: false };
     }
     if (found.status === 'REVOKED') {
-      return { status: 'REVOKED', badge: 'REVOKED', reason: found.revocation_reason, isGranted: true };
+      return { ...found, status: 'REVOKED', badge: 'REVOKED', reason: found.revocation_reason, isGranted: true };
     }
-    return { status: 'ACTIVE', badge: 'ACTIVE', isGranted: true };
+    if (found.status === 'EXPIRED') {
+      return { ...found, status: 'EXPIRED', badge: 'EXPIRED', reason: 'Operator-defined lifetime ended', isGranted: true };
+    }
+    return { ...found, status: 'ACTIVE', badge: 'ACTIVE', isGranted: true };
   };
 
   const activeCount = capabilities.filter((c) => c.status === 'ACTIVE').length;
@@ -47,9 +50,10 @@ export default function CapabilityPanel({ capabilities = [], securityState }) {
       {/* Grid of Capabilities */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
         {operations.map(({ op, label, desc, icon: Icon }) => {
-          const { status, badge, reason } = getStatus(op);
+          const capability = getStatus(op);
+          const { status, badge, reason } = capability;
           const isActive = status === 'ACTIVE';
-          const isRevoked = status === 'REVOKED';
+          const isRevoked = status === 'REVOKED' || status === 'EXPIRED';
 
           return (
             <div
@@ -96,8 +100,15 @@ export default function CapabilityPanel({ capabilities = [], securityState }) {
               </div>
 
               <div className="font-mono text-[11px] text-slate-300 bg-slate-900/70 px-2 py-1 rounded-md border border-white/[0.06] truncate">
-                {desc}
+                {capability.resource || desc}
               </div>
+
+              {capability.expires_at && (
+                <div className="mt-1.5 flex items-center gap-1 text-[9px] font-mono text-slate-400">
+                  <Clock className="w-3 h-3" />
+                  <span>Expires {new Date(capability.expires_at).toLocaleString()}</span>
+                </div>
+              )}
 
               {reason && (
                 <div className="text-[10px] text-amber-300/90 mt-1.5 italic truncate font-medium flex items-center gap-1">

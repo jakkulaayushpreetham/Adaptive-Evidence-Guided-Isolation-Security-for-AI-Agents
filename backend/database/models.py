@@ -40,6 +40,7 @@ class CapabilityHistoryModel(Base):
     resource = Column(String(256), nullable=False)
     status = Column(String(32), nullable=False)
     created_at = Column(DateTime, default=utc_now, nullable=False)
+    expires_at = Column(DateTime, nullable=True)
     revoked_at = Column(DateTime, nullable=True)
     revocation_reason = Column(String(256), nullable=True)
 

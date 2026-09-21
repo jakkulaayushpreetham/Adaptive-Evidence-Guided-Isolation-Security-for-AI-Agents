@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import uuid
 from sqlalchemy.orm import Session
@@ -21,6 +22,7 @@ from backend.database.repositories.task_repository import TaskRepository
 from backend.database.repositories.trust_repository import TrustRepository
 from backend.runtime.security_runtime import SecurityRuntime
 from backend.services.audit_sink import SecurityAuditSink
+from backend.task_engine.policy_validator import CapabilityProposal, PolicyValidator
 
 
 class TaskService:
@@ -53,38 +55,68 @@ class TaskService:
         description: str,
         agent_id: str | None = None,
         task_id: str | None = None,
+        capabilities: list[dict] | None = None,
     ) -> dict:
         agent_id = agent_id or f"AGT-{uuid.uuid4().hex[:8].upper()}"
         task_id = task_id or f"TASK-{uuid.uuid4().hex[:8].upper()}"
 
-        # Ensure agent exists
-        self.agent_repo.create(agent_id=agent_id, status="ACTIVE")
+        explicitly_approved = capabilities is not None
+        requested_capabilities = capabilities
+        if requested_capabilities is None:
+            requested_capabilities = [
+                {
+                    "operation": Operation.READ_FILE.value,
+                    "resource": "/workspace/input/research.txt",
+                    "lifetime_seconds": None,
+                },
+                {
+                    "operation": Operation.WRITE_FILE.value,
+                    "resource": "/workspace/output/summary.txt",
+                    "lifetime_seconds": None,
+                },
+            ]
 
-        # Create task record
+        validator = PolicyValidator()
+        validated_capabilities = []
+        for requested in requested_capabilities:
+            validated_capabilities.append((
+                validator.validate(
+                    CapabilityProposal(
+                        operation=Operation(requested["operation"]),
+                        resource=requested["resource"],
+                    )
+                ),
+                requested.get("lifetime_seconds"),
+            ))
+
+        self.agent_repo.create(agent_id=agent_id, status="ACTIVE")
         task_model = self.task_repo.create(
             task_id=task_id,
             agent_id=agent_id,
             description=description,
-            status="CREATED",
+            status="ASSIGNED" if explicitly_approved else "CREATED",
         )
 
-        # Provision task-scoped least privilege capabilities
-        read_cap = self.capability_manager.grant(
-            agent_id=agent_id,
-            task_id=task_id,
-            operation=Operation.READ_FILE,
-            resource="/workspace/input/research.txt",
-        )
-        write_cap = self.capability_manager.grant(
-            agent_id=agent_id,
-            task_id=task_id,
-            operation=Operation.WRITE_FILE,
-            resource="/workspace/output/summary.txt",
-        )
+        granted_capabilities = []
+        for proposal, lifetime_seconds in validated_capabilities:
+            expires_at = (
+                datetime.now(timezone.utc) + timedelta(seconds=lifetime_seconds)
+                if lifetime_seconds is not None
+                else None
+            )
+            granted_capabilities.append(
+                self.capability_manager.grant(
+                    agent_id=agent_id,
+                    task_id=task_id,
+                    operation=proposal.operation,
+                    resource=proposal.resource,
+                    expires_at=expires_at,
+                )
+            )
 
         if self.audit_sink:
-            self.audit_sink.record_capability_grant(read_cap)
-            self.audit_sink.record_capability_grant(write_cap)
+            for capability in granted_capabilities:
+                self.audit_sink.record_capability_grant(capability)
             initial_trust = self.runtime.get_trust_state(agent_id=agent_id, task_id=task_id)
             self.audit_sink.record_trust_snapshot(agent_id, task_id, initial_trust)
 
@@ -157,20 +189,31 @@ class TaskService:
         if not task:
             return []
         caps = self.cap_repo.list_by_task(task_id)
-        return [
-            {
-                "capability_id": c.capability_id,
-                "agent_id": c.agent_id,
-                "task_id": c.task_id,
-                "operation": c.operation,
-                "resource": c.resource,
-                "status": c.status,
-                "created_at": c.created_at,
-                "revoked_at": c.revoked_at,
-                "revocation_reason": c.revocation_reason,
-            }
-            for c in caps
-        ]
+        capability_responses = []
+        now = datetime.now(timezone.utc)
+        for capability in caps:
+            expires_at = capability.expires_at
+            comparable_expiry = (
+                expires_at.replace(tzinfo=timezone.utc)
+                if expires_at is not None and expires_at.tzinfo is None
+                else expires_at
+            )
+            effective_status = capability.status
+            if effective_status == "ACTIVE" and comparable_expiry is not None and now >= comparable_expiry:
+                effective_status = "EXPIRED"
+            capability_responses.append({
+                "capability_id": capability.capability_id,
+                "agent_id": capability.agent_id,
+                "task_id": capability.task_id,
+                "operation": capability.operation,
+                "resource": capability.resource,
+                "status": effective_status,
+                "created_at": capability.created_at,
+                "expires_at": expires_at,
+                "revoked_at": capability.revoked_at,
+                "revocation_reason": capability.revocation_reason,
+            })
+        return capability_responses
 
     def get_trust(self, task_id: str) -> dict | None:
         task = self.task_repo.get(task_id)

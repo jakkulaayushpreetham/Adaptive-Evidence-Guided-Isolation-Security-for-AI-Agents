@@ -16,7 +16,7 @@
   "maximum_conflict": 0.075,
   "detection_latency_ms": null,
   "revocation_latency_ms": null,
-  "execution_time_ms": 0.107,
+  "execution_time_ms": 0.2014,
   "capabilities_revoked": 0,
   "evidence_count": 2,
   "notes": "2 authorized ops: READ + WRITE"

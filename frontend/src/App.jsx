@@ -22,12 +22,12 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#05070e] text-slate-100 flex flex-col selection:bg-cyan-500/25 selection:text-cyan-200">
+    <div className="aegis-experience min-h-screen text-slate-100 flex flex-col selection:bg-orange-400/30 selection:text-orange-50">
       {/* Master Top Cyber Command Bar */}
-      <nav className="border-b border-white/[0.08] bg-[#080c18]/85 backdrop-blur-2xl px-4 lg:px-7 py-2.5 flex items-center justify-between sticky top-0 z-50 shadow-[0_4px_30px_rgba(0,0,0,0.6)]">
+      <nav className="aegis-topbar border-b border-white/[0.08] backdrop-blur-2xl px-4 lg:px-7 py-2.5 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-6 lg:gap-8">
           {/* Logo & Brand */}
-          <div className="flex items-center gap-3">
+          <div className="aegis-brand flex items-center gap-3">
             <div className="relative cursor-pointer" onClick={() => setCurrentTab('dashboard')}>
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 via-sky-500 to-indigo-600 p-[1.5px] shadow-[0_0_20px_rgba(14,165,233,0.45)]">
                 <div className="w-full h-full bg-[#090d1c] rounded-[10px] flex items-center justify-center">
@@ -43,7 +43,7 @@ export default function App() {
                   AEGIS-AI
                 </span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 font-mono font-bold tracking-wider">
-                  OS DEFENSE SOC
+                  SECURITY CONSOLE
                 </span>
               </div>
               <div className="text-[10px] text-slate-400 font-medium tracking-wide">
@@ -63,7 +63,7 @@ export default function App() {
               }`}
             >
               <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>SOC Command Deck</span>
+              <span>Overview</span>
             </button>
 
             <button
@@ -75,7 +75,7 @@ export default function App() {
               }`}
             >
               <UserCheck className="w-3.5 h-3.5" />
-              <span>Agent Principal</span>
+              <span>Agent</span>
             </button>
 
             <button
@@ -87,7 +87,7 @@ export default function App() {
               }`}
             >
               <FileText className="w-3.5 h-3.5" />
-              <span>Task Scope</span>
+              <span>Task</span>
             </button>
 
             <button
@@ -99,7 +99,7 @@ export default function App() {
               }`}
             >
               <History className="w-3.5 h-3.5" />
-              <span>Audit Provenance</span>
+              <span>Incidents</span>
             </button>
           </div>
         </div>
@@ -124,8 +124,8 @@ export default function App() {
           </div>
 
           {/* D-S Fusion Version */}
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/25 text-indigo-300 text-xs font-mono font-bold">
-            <Cpu className="w-3.5 h-3.5 text-indigo-400" />
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-white/[0.08] text-cyan-300 text-xs font-mono font-bold">
+            <Cpu className="w-3.5 h-3.5 text-cyan-400" />
             <span>D-S FUSION &Theta;=&#123;T,U&#125;</span>
           </div>
         </div>

@@ -11,3 +11,5 @@ docker
 sqlalchemy
 aiosqlite
 python-dotenv
+openai
+google-genai

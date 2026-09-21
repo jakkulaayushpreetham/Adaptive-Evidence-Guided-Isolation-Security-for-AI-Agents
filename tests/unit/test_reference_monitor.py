@@ -1,4 +1,6 @@
-from backend.capability.capability import Operation
+from datetime import datetime, timedelta, timezone
+
+from backend.capability.capability import CapabilityStatus, Operation
 from backend.capability.capability_manager import CapabilityManager
 from backend.capability.capability_store import CapabilityStore
 from backend.reference_monitor.authorization import Decision
@@ -76,3 +78,26 @@ def test_missing_network_capability_is_denied():
 
     assert result.decision is Decision.DENY
     assert result.reason == "NO_CAPABILITY"
+
+
+def test_expired_capability_is_denied():
+    _, manager, monitor = build_security_core()
+
+    capability = manager.grant(
+        agent_id="AGENT-001",
+        task_id="TASK-001",
+        operation=Operation.READ_FILE,
+        resource="/workspace/input/research.txt",
+        expires_at=datetime.now(timezone.utc) - timedelta(seconds=1),
+    )
+
+    result, _ = monitor.authorize(
+        agent_id="AGENT-001",
+        task_id="TASK-001",
+        operation=Operation.READ_FILE,
+        resource="/workspace/input/research.txt",
+    )
+
+    assert result.decision is Decision.DENY
+    assert result.reason == "CAPABILITY_EXPIRED"
+    assert capability.status is CapabilityStatus.EXPIRED

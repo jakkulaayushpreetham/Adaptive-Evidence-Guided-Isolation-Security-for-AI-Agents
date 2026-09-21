@@ -37,10 +37,18 @@ class Capability:
         default_factory=lambda: datetime.now(timezone.utc)
     )
 
+    expires_at: datetime | None = None
+
     revoked_at: datetime | None = None
     revocation_reason: str | None = None
 
     def is_active(self) -> bool:
+        if (
+            self.status is CapabilityStatus.ACTIVE
+            and self.expires_at is not None
+            and datetime.now(timezone.utc) >= self.expires_at
+        ):
+            self.status = CapabilityStatus.EXPIRED
         return self.status is CapabilityStatus.ACTIVE
 
     def revoke(self, reason: str) -> None:

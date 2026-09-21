@@ -17,6 +17,7 @@ class CapabilityRepository:
         operation: str,
         resource: str,
         status: str = "ACTIVE",
+        expires_at: datetime | None = None,
     ) -> CapabilityHistoryModel:
         record = CapabilityHistoryModel(
             capability_id=capability_id,
@@ -25,6 +26,7 @@ class CapabilityRepository:
             operation=operation,
             resource=resource,
             status=status,
+            expires_at=expires_at,
         )
         self.db.add(record)
         self.db.commit()

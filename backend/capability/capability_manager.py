@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from backend.capability.capability import (
     Capability,
     CapabilityStatus,
@@ -21,6 +23,7 @@ class CapabilityManager:
         task_id: str,
         operation: Operation,
         resource: str,
+        expires_at: datetime | None = None,
     ) -> Capability:
 
         resource = normalize_resource(resource)
@@ -43,6 +46,7 @@ class CapabilityManager:
             task_id=task_id,
             operation=operation,
             resource=resource,
+            expires_at=expires_at,
         )
 
         return self._store.save(capability)

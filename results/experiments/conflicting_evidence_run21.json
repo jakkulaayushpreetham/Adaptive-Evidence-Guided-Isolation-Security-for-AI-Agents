@@ -14,9 +14,9 @@
   "final_m_u": 0.3989,
   "final_m_theta": 0.0185,
   "maximum_conflict": 0.5779,
-  "detection_latency_ms": 0.12,
-  "revocation_latency_ms": 0.0018,
-  "execution_time_ms": 0.5016,
+  "detection_latency_ms": 0.1292,
+  "revocation_latency_ms": 0.0019,
+  "execution_time_ms": 0.5773,
   "capabilities_revoked": 1,
   "evidence_count": 4,
   "notes": "Alternating auth READ and unauth file access to generate high D-S conflict K"

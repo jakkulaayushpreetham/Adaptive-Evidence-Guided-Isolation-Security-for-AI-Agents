@@ -14,9 +14,9 @@
   "final_m_u": 0.9218,
   "final_m_theta": 0.0072,
   "maximum_conflict": 0.5043,
-  "detection_latency_ms": 0.0336,
-  "revocation_latency_ms": 0.0007,
-  "execution_time_ms": 0.1804,
+  "detection_latency_ms": 0.046,
+  "revocation_latency_ms": 0.001,
+  "execution_time_ms": 0.2644,
   "capabilities_revoked": 1,
   "evidence_count": 4,
   "notes": "1 auth read + 3 severe multi-vector violations (EXECUTE, NETWORK, DELETE)"

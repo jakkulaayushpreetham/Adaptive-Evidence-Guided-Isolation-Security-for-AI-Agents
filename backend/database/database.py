@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from typing import Generator
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
 DATABASE_URL = os.getenv("AEGIS_DATABASE_URL", "sqlite:///./aegis.db")
@@ -36,6 +36,11 @@ def get_db() -> Generator[Session, None, None]:
 def init_database(custom_engine=None) -> None:
     target_engine = custom_engine or engine
     Base.metadata.create_all(bind=target_engine)
+    if target_engine.dialect.name == "sqlite":
+        columns = {column["name"] for column in inspect(target_engine).get_columns("capability_history")}
+        if "expires_at" not in columns:
+            with target_engine.begin() as connection:
+                connection.execute(text("ALTER TABLE capability_history ADD COLUMN expires_at DATETIME"))
 
 
 def reset_database(custom_engine=None) -> None:

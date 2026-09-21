@@ -6,9 +6,10 @@ from sqlalchemy.orm import Session
 from backend.database.database import get_db
 from backend.schemas.capability_schema import CapabilityResponse
 from backend.schemas.event_schema import SecurityEventResponse
-from backend.schemas.task_schema import TaskCreateRequest, TaskResponse, TaskRunResponse
+from backend.schemas.task_schema import TaskAnalysisRequest, TaskAnalysisResponse, TaskCreateRequest, TaskResponse, TaskRunResponse
 from backend.schemas.trust_schema import TrustStateResponse
 from backend.services.security_service import get_security_service
+from backend.services.task_analyzer_service import TaskAnalyzerService
 from backend.services.task_service import TaskService
 
 router = APIRouter(prefix="/api/tasks", tags=["Tasks"])
@@ -30,12 +31,28 @@ def create_task(
     request: TaskCreateRequest,
     service: TaskService = Depends(get_task_service),
 ):
-    task = service.create_task(
-        description=request.description,
-        agent_id=request.agent_id,
-        task_id=request.task_id,
-    )
+    try:
+        task = service.create_task(
+            description=request.description,
+            agent_id=request.agent_id,
+            task_id=request.task_id,
+            capabilities=(
+                [capability.model_dump() for capability in request.capabilities]
+                if request.capabilities is not None
+                else None
+            ),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     return task
+
+
+@router.post("/analyze", response_model=TaskAnalysisResponse)
+def analyze_task(request: TaskAnalysisRequest):
+    """Generate a GPU-local/cloud plan; model output never grants permissions directly."""
+    return TaskAnalyzerService().analyze(
+        task_description=request.task_description,
+    )
 
 
 @router.get("/{task_id}", response_model=TaskResponse)

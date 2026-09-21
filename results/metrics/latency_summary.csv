@@ -1,8 +1,8 @@
 scenario,detection_mean_ms,detection_p95_ms,revocation_mean_ms,revocation_p95_ms,execution_mean_ms,execution_p95_ms
-normal_agent,,,,,0.1133,0.1405
-accidental_violation,0.0447,0.0825,0.0007,0.0009,0.1666,0.2452
-unauthorized_network,0.0321,0.0345,0.0006,0.0007,0.0851,0.0921
-unauthorized_file,0.061,0.0716,0.0006,0.0007,0.1152,0.1282
-repeated_violation,0.0375,0.0606,0.0007,0.0011,0.2276,0.359
-severe_violation,0.0338,0.0469,0.0008,0.001,0.1717,0.2122
-conflicting_evidence,0.1008,0.1308,0.0011,0.0018,0.397,0.544
+normal_agent,,,,,0.1995,0.3112
+accidental_violation,0.0993,0.2417,0.0014,0.0035,0.4008,0.9234
+unauthorized_network,0.126,0.2813,0.0023,0.0036,0.3592,0.5269
+unauthorized_file,0.1209,0.2378,0.0013,0.0024,0.2494,0.4987
+repeated_violation,0.0569,0.1054,0.0011,0.002,0.3557,0.6142
+severe_violation,0.0693,0.1457,0.0015,0.0033,0.3845,0.8394
+conflicting_evidence,0.1572,0.2728,0.0018,0.003,0.5991,1.0308

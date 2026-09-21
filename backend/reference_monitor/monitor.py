@@ -75,13 +75,17 @@ class ReferenceMonitor:
 
         capability = matching_resource[0]
 
-        if capability.status is not CapabilityStatus.ACTIVE:
+        if not capability.is_active():
             return self._deny(
                 agent_id=agent_id,
                 task_id=task_id,
                 operation=operation,
                 resource=resource,
-                reason="CAPABILITY_REVOKED",
+                reason=(
+                    "CAPABILITY_EXPIRED"
+                    if capability.status is CapabilityStatus.EXPIRED
+                    else "CAPABILITY_REVOKED"
+                ),
                 capability_id=capability.capability_id,
             )
 

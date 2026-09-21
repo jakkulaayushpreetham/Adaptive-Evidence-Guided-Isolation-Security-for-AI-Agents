@@ -14,9 +14,9 @@
   "final_m_u": 0.9299,
   "final_m_theta": 0.0062,
   "maximum_conflict": 0.4849,
-  "detection_latency_ms": 0.0555,
-  "revocation_latency_ms": 0.001,
-  "execution_time_ms": 0.3293,
+  "detection_latency_ms": 0.0496,
+  "revocation_latency_ms": 0.0045,
+  "execution_time_ms": 0.541,
   "capabilities_revoked": 2,
   "evidence_count": 4,
   "notes": "1 authorized read + 4 unauthorized network (escalating)"

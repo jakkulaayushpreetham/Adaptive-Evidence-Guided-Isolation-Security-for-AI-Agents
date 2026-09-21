@@ -5,9 +5,17 @@ export class SOCWebSocket {
     this.socket = null;
     this.reconnectTimer = null;
     this.isConnected = false;
+    this.hasReportedOutage = false;
   }
 
   connect() {
+    if (
+      this.socket
+      && (this.socket.readyState === WebSocket.CONNECTING || this.socket.readyState === WebSocket.OPEN)
+    ) {
+      return;
+    }
+
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
     const wsUrl = `${protocol}//${host}/ws/soc`;
@@ -17,6 +25,7 @@ export class SOCWebSocket {
 
       this.socket.onopen = () => {
         this.isConnected = true;
+        this.hasReportedOutage = false;
         if (this.onStatusChange) this.onStatusChange(true);
       };
 
@@ -36,7 +45,10 @@ export class SOCWebSocket {
       };
 
       this.socket.onerror = (err) => {
-        console.warn('WS error:', err);
+        if (!this.hasReportedOutage) {
+          console.info('Live backend connection unavailable; retrying in the background.');
+          this.hasReportedOutage = true;
+        }
         this.socket?.close();
       };
     } catch (e) {
@@ -54,9 +66,20 @@ export class SOCWebSocket {
 
   disconnect() {
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
-    if (this.socket) {
-      this.socket.onclose = null;
-      this.socket.close();
+    this.reconnectTimer = null;
+
+    const socket = this.socket;
+    this.socket = null;
+    if (!socket) return;
+
+    socket.onmessage = null;
+    socket.onclose = null;
+    socket.onerror = () => {};
+
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.close(1000, 'Client disconnected');
+    } else if (socket.readyState === WebSocket.CONNECTING) {
+      socket.onopen = () => socket.close(1000, 'Client disconnected');
     }
   }
 }

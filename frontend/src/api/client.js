@@ -10,16 +10,27 @@ export async function fetchJson(url, options = {}) {
   });
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`API Error ${response.status}: ${errorText}`);
+    let detail = errorText;
+    try {
+      const payload = JSON.parse(errorText);
+      detail = payload.detail || payload.message || errorText;
+    } catch {
+      // Preserve non-JSON server errors as-is.
+    }
+    throw new Error(`API Error ${response.status}: ${detail}`);
   }
   return response.json();
 }
 
 export const api = {
   getHealth: () => fetchJson('/health'),
-  createTask: (description) => fetchJson(`${API_BASE}/tasks`, {
+  createTask: (description, capabilities) => fetchJson(`${API_BASE}/tasks`, {
     method: 'POST',
-    body: JSON.stringify({ description }),
+    body: JSON.stringify({ description, capabilities }),
+  }),
+  analyzeTask: ({ taskDescription }) => fetchJson(`${API_BASE}/tasks/analyze`, {
+    method: 'POST',
+    body: JSON.stringify({ task_description: taskDescription }),
   }),
   getTask: (taskId) => fetchJson(`${API_BASE}/tasks/${taskId}`),
   runTask: (taskId) => fetchJson(`${API_BASE}/tasks/${taskId}/run`, { method: 'POST' }),

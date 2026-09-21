@@ -14,9 +14,9 @@
   "final_m_u": 0.3968,
   "final_m_theta": 0.1058,
   "maximum_conflict": 0.5275,
-  "detection_latency_ms": 0.0571,
-  "revocation_latency_ms": 0.0005,
-  "execution_time_ms": 0.1119,
+  "detection_latency_ms": 0.1785,
+  "revocation_latency_ms": 0.002,
+  "execution_time_ms": 0.3885,
   "capabilities_revoked": 1,
   "evidence_count": 2,
   "notes": "1 authorized read + 1 unauthorized private file read"

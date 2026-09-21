@@ -2,11 +2,18 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Terminal, Shield, AlertTriangle, CheckCircle2, XCircle, Radio, Activity, Filter } from 'lucide-react';
 
 export default function EventStream({ events = [] }) {
-  const streamEndRef = useRef(null);
+  const streamBodyRef = useRef(null);
   const [filter, setFilter] = useState('ALL');
 
   useEffect(() => {
-    streamEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Keep new events visible without moving the dashboard itself. Calling
+    // scrollIntoView here scrolls ancestor pages as well as this log panel.
+    const streamBody = streamBodyRef.current;
+    if (!streamBody) return;
+    streamBody.scrollTo({
+      top: streamBody.scrollHeight,
+      behavior: events.length > 1 ? 'smooth' : 'auto',
+    });
   }, [events]);
 
   const formatTime = (ts) => {
@@ -114,7 +121,7 @@ export default function EventStream({ events = [] }) {
       </div>
 
       {/* Event Stream Body */}
-      <div className="flex-1 overflow-y-auto mt-2.5 pr-1 space-y-1.5 font-mono text-xs">
+      <div ref={streamBodyRef} className="event-stream-body flex-1 overflow-y-auto mt-2.5 pr-1 space-y-1.5 font-mono text-xs">
         {events.length === 0 ? (
           <div className="space-y-2 py-1">
             {/* Baseline Boot Diagnostic Logs so there is NEVER an empty dead void */}
@@ -190,7 +197,6 @@ export default function EventStream({ events = [] }) {
             );
           })
         )}
-        <div ref={streamEndRef} />
       </div>
     </div>
   );

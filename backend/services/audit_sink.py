@@ -185,6 +185,7 @@ class SqlAlchemyAuditSink:
                 operation=capability.operation.value,
                 resource=capability.resource,
                 status=capability.status.value,
+                expires_at=capability.expires_at,
             )
         try:
             from backend.api.websocket import manager as ws_manager
@@ -195,6 +196,7 @@ class SqlAlchemyAuditSink:
                 "operation": capability.operation.value,
                 "resource": capability.resource,
                 "status": capability.status.value,
+                "expires_at": capability.expires_at.isoformat() if capability.expires_at else None,
             })
             ws_manager.broadcast_sync(envelope)
         except Exception:
