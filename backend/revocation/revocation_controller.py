@@ -1,4 +1,4 @@
-"""Controls dynamic revocation of capabilities upon policy trigger."""
+"""Controls dynamic revocation and attenuation of capabilities upon policy trigger."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -29,13 +29,13 @@ class RevocationController:
     Converts adaptive-policy decisions into capability changes.
 
     NORMAL:
-        No capability changes.
+        No capability changes (or restore attenuated capabilities upon recovery).
 
     RESTRICTED:
-        Revoke higher-risk capabilities.
+        Revoke higher-risk capabilities or enforce dynamic attenuation.
 
     CRITICAL:
-        Revoke all capabilities and request isolation.
+        Revoke all capabilities and request isolation / container freeze.
     """
 
     RESTRICTED_OPERATIONS = (
@@ -62,13 +62,17 @@ class RevocationController:
         state = decision.proposed_state
 
         if state is SecurityState.NORMAL:
+            # If recovering from RESTRICTED, restore any attenuated capabilities
+            if decision.previous_state is SecurityState.RESTRICTED:
+                self.restore(agent_id=agent_id, task_id=task_id)
+
             return RevocationResult(
                 agent_id=agent_id,
                 task_id=task_id,
                 state=state,
                 revoked_capabilities=(),
                 isolation_required=False,
-                reason="No capability revocation required.",
+                reason=decision.reason if decision.previous_state is not SecurityState.NORMAL else "No capability revocation required.",
             )
 
         if state is SecurityState.RESTRICTED:
@@ -101,6 +105,43 @@ class RevocationController:
             isolation_required=True,
             reason=decision.reason,
         )
+
+    def attenuate(
+        self,
+        *,
+        agent_id: str,
+        task_id: str,
+        narrowed_resource: str | None = None,
+        compressed_ttl_seconds: int | None = None,
+        rate_limit_per_minute: int | None = None,
+    ) -> list[Capability]:
+        """Attenuates all active capabilities for a task without full revocation."""
+        capabilities = self._capability_manager._store.find_for_task(agent_id, task_id)
+        attenuated: list[Capability] = []
+        for cap in capabilities:
+            if cap.is_active():
+                cap.attenuate(
+                    narrowed_resource=narrowed_resource,
+                    compressed_ttl_seconds=compressed_ttl_seconds,
+                    rate_limit_per_minute=rate_limit_per_minute,
+                )
+                attenuated.append(cap)
+        return attenuated
+
+    def restore(
+        self,
+        *,
+        agent_id: str,
+        task_id: str,
+    ) -> list[Capability]:
+        """Restores unattenuated parameters for all capabilities of a rehabilitated task."""
+        capabilities = self._capability_manager._store.find_for_task(agent_id, task_id)
+        restored: list[Capability] = []
+        for cap in capabilities:
+            if cap.is_attenuated:
+                cap.restore_attenuation()
+                restored.append(cap)
+        return restored
 
     def _restrict(
         self,

@@ -9,6 +9,7 @@ from backend.api.agent_routes import router as agent_router
 from backend.api.capability_routes import router as capability_router
 from backend.api.security_routes import router as security_router
 from backend.api.trust_routes import router as trust_router
+from backend.api.dynamic_routes import router as dynamic_router
 from backend.api.websocket import router as ws_router
 
 
@@ -51,4 +52,5 @@ app.include_router(agent_router)
 app.include_router(capability_router)
 app.include_router(security_router)
 app.include_router(trust_router)
+app.include_router(dynamic_router)
 app.include_router(ws_router)

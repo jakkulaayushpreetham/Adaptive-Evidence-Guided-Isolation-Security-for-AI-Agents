@@ -15,6 +15,7 @@ import DemoControls from '../components/DemoControls';
 import EventInjectorDrawer from '../components/EventInjectorDrawer';
 import LiveAgentChamber from '../components/LiveAgentChamber';
 import StickyPipelineFlow from '../components/StickyPipelineFlow';
+import DynamicAdaptiveMatrix from '../components/DynamicAdaptiveMatrix';
 import { Shield, RefreshCw, Cpu, Activity, ShieldCheck, Database, Layers, Radio, Brain, Zap } from 'lucide-react';
 
 export default function Dashboard() {
@@ -499,6 +500,16 @@ export default function Dashboard() {
           isCritical={securityState === 'CRITICAL'}
         />
       )}
+
+      {/* Dynamic Adaptive OS Architecture Matrix (v2.0 Contextual) */}
+      <DynamicAdaptiveMatrix
+        agentId={task?.agent_id || 'AGENT-001'}
+        taskId={task?.task_id || 'TASK-001'}
+        securityState={securityState}
+        trust={trust}
+        onSimulateOperation={handleSimulateAttack}
+        wsConnected={wsConnected}
+      />
 
       {/* High-Impact 2-Column Responsive Command Center Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">

@@ -48,4 +48,10 @@ export const api = {
       resource,
     }),
   }),
+  getDynamicTelemetry: (agentId, taskId) => fetchJson(`${API_BASE}/dynamic/telemetry/${agentId}/${taskId}`),
+  getCanaries: () => fetchJson(`${API_BASE}/dynamic/canaries`),
+  createCanary: (data) => fetchJson(`${API_BASE}/dynamic/canaries`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
 };

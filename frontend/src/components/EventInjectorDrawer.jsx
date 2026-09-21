@@ -207,6 +207,41 @@ export const EVENT_CATALOG = [
     description: 'Repeated unauthorized egress attempt while under restriction.',
     expected: 'DENY -> State escalates to CRITICAL -> Full quarantine',
   },
+
+  // Category 5: Dynamic Honeytokens & Self-Healing (v2 Contextual)
+  {
+    id: 'dyn-1',
+    category: 'Canary Trap',
+    risk: 'CRITICAL',
+    badgeClass: 'badge-pill-rose',
+    operation: 'READ_FILE',
+    resource: '/workspace/.canary/vault_key.json',
+    title: 'Synthetic Canary Honeytoken Detonation',
+    description: 'Probes synthetic decoy vault key trap. High-confidence zero-trust trigger.',
+    expected: 'DENY -> Canary Tripwire DETONATED -> Instant CRITICAL Freeze',
+  },
+  {
+    id: 'dyn-2',
+    category: 'Canary Trap',
+    risk: 'CRITICAL',
+    badgeClass: 'badge-pill-rose',
+    operation: 'NETWORK',
+    resource: 'https://internal-canary.vault/keys',
+    title: 'Honeypot Internal Egress Detonation',
+    description: 'Attempts outbound network connect to fake honeypot endpoint.',
+    expected: 'DENY -> Honeypot Egress Trap tripped -> Instant Cgroup Freeze',
+  },
+  {
+    id: 'dyn-3',
+    category: 'Compliant',
+    risk: 'SAFE',
+    badgeClass: 'badge-pill-emerald',
+    operation: 'READ_FILE',
+    resource: '/workspace/input/research.txt',
+    title: 'Compliance-Driven Probation Recovery',
+    description: 'Executes verified authorized operation to rebuild compliance streak.',
+    expected: 'ALLOW -> Compliance streak increments -> De-escalates to NORMAL',
+  },
 ];
 
 export default function EventInjectorDrawer({

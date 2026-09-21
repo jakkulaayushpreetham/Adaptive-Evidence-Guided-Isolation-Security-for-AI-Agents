@@ -191,6 +191,39 @@ class DockerManager:
                 f"Failed to stop sandbox {container_id}."
             ) from exc
 
+    def pause(self, container_id: str) -> ContainerInfo:
+        container = self._get(container_id)
+        try:
+            container.pause()
+            container.reload()
+            return self._to_info(container)
+        except (DockerException, APIError) as exc:
+            raise DockerManagerError(
+                f"Failed to pause sandbox {container_id}."
+            ) from exc
+
+    def unpause(self, container_id: str) -> ContainerInfo:
+        container = self._get(container_id)
+        try:
+            container.unpause()
+            container.reload()
+            return self._to_info(container)
+        except (DockerException, APIError) as exc:
+            raise DockerManagerError(
+                f"Failed to unpause sandbox {container_id}."
+            ) from exc
+
+    def throttle_cpu(self, container_id: str, nano_cpus: int = 100_000_000) -> ContainerInfo:
+        container = self._get(container_id)
+        try:
+            container.update(nano_cpus=nano_cpus)
+            container.reload()
+            return self._to_info(container)
+        except (DockerException, APIError) as exc:
+            raise DockerManagerError(
+                f"Failed to throttle sandbox {container_id}."
+            ) from exc
+
     def kill(self, container_id: str) -> ContainerInfo:
         container = self._get(container_id)
 

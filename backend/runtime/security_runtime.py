@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from threading import RLock
+from typing import Any
 
 from backend.capability.capability import Operation
 from backend.policy.policy_engine import AdaptivePolicyEngine
@@ -24,13 +25,16 @@ class RuntimeResult:
     uncertainty: float
     conflict: float
     isolation_required: bool
+    telemetry: dict[str, Any] = field(default_factory=dict)
 
 
 class SecurityRuntime:
     """
-    Trusted host-side coordinator for the AEGIS-AI security loop.
+    Trusted host-side coordinator for the AEGIS-AI adaptive security loop.
 
     Protected operations must pass through this runtime before execution.
+    Features dynamic context-aware evidence fusion, temporal decay,
+    velocity burst detection, and self-healing compliance recovery.
     """
 
     def __init__(
@@ -53,9 +57,7 @@ class SecurityRuntime:
         self._audit_sink = audit_sink
 
         self._trust_states: dict[tuple[str, str], TrustState] = {}
-        self._security_states: dict[
-            tuple[str, str], SecurityState
-        ] = {}
+        self._security_states: dict[tuple[str, str], SecurityState] = {}
 
         self._lock = RLock()
 
@@ -77,7 +79,7 @@ class SecurityRuntime:
                 SecurityState.NORMAL,
             )
 
-            # Fail closed once the task is critical.
+            # Fail closed once the task is critical
             if current_security_state is SecurityState.CRITICAL:
                 authorization, _ = self._reference_monitor.authorize(
                     agent_id=agent_id,
@@ -99,26 +101,36 @@ class SecurityRuntime:
                     uncertainty=trust.uncertainty,
                     conflict=trust.last_conflict,
                     isolation_required=True,
+                    telemetry={"status": "TERMINATED_FAIL_CLOSED"},
                 )
 
-            authorization, event = (
-                self._reference_monitor.authorize(
-                    agent_id=agent_id,
-                    task_id=task_id,
-                    operation=operation,
-                    resource=resource,
+            trust = self._get_trust_state(agent_id, task_id)
+
+            # Apply temporal decay to trust state before processing new event
+            if hasattr(self._evidence_mapper, "dynamic_generator"):
+                trust.apply_temporal_decay(
+                    self._evidence_mapper.dynamic_generator.decay_engine
                 )
+
+            authorization, event = self._reference_monitor.authorize(
+                agent_id=agent_id,
+                task_id=task_id,
+                operation=operation,
+                resource=resource,
             )
+
+            # Update compliance tracking
+            if authorization.allowed:
+                trust.record_compliance()
+            else:
+                trust.record_violation()
 
             evidence = self._evidence_mapper.map(
                 event,
                 repeated=repeated,
             )
-
-            trust = self._get_trust_state(
-                agent_id,
-                task_id,
-            )
+            telemetry = getattr(self._evidence_mapper, "last_telemetry", {}).copy()
+            telemetry["compliance_streak"] = trust.compliance_streak
 
             trust.apply(
                 evidence,
@@ -136,10 +148,43 @@ class SecurityRuntime:
                 decision=decision,
             )
 
-            self._security_states[key] = (
-                decision.proposed_state
-            )
+            self._security_states[key] = decision.proposed_state
 
+            # Broadcast recovery notification if transitioning from RESTRICTED -> NORMAL
+            if (
+                decision.previous_state is SecurityState.RESTRICTED
+                and decision.proposed_state is SecurityState.NORMAL
+            ):
+                try:
+                    from backend.api.websocket import manager as ws_manager
+                    ws_envelope = ws_manager.create_envelope("PROBATION_RECOVERED", task_id, {
+                        "agent_id": agent_id,
+                        "task_id": task_id,
+                        "previous_state": "RESTRICTED",
+                        "new_state": "NORMAL",
+                        "streak": trust.compliance_streak,
+                        "reason": decision.reason,
+                    })
+                    ws_manager.broadcast_sync(ws_envelope)
+                except Exception:
+                    pass
+
+            # Broadcast canary alert if honeytoken was tripped
+            if telemetry.get("canary_tripped"):
+                try:
+                    from backend.api.websocket import manager as ws_manager
+                    ws_envelope = ws_manager.create_envelope("CANARY_TRIPPED", task_id, {
+                        "agent_id": agent_id,
+                        "task_id": task_id,
+                        "canary_id": telemetry.get("canary_id"),
+                        "canary_desc": telemetry.get("canary_desc"),
+                        "resource": resource,
+                    })
+                    ws_manager.broadcast_sync(ws_envelope)
+                except Exception:
+                    pass
+
+            # Record audit sinks
             if self._audit_sink is not None:
                 self._audit_sink.record_event(event)
                 self._audit_sink.record_trust_snapshot(agent_id, task_id, trust)
@@ -159,6 +204,7 @@ class SecurityRuntime:
                         reason=decision.reason,
                     )
 
+            # Handle isolation if required
             if revocation.isolation_required:
                 try:
                     from backend.api.websocket import manager as ws_manager
@@ -179,6 +225,28 @@ class SecurityRuntime:
                         reason=decision.reason,
                     )
 
+            # Broadcast real-time dynamic telemetry
+            try:
+                from backend.api.websocket import manager as ws_manager
+                envelope = ws_manager.create_envelope("DYNAMIC_TELEMETRY", task_id, {
+                    "agent_id": agent_id,
+                    "task_id": task_id,
+                    "operation": operation.value,
+                    "resource": resource,
+                    "allowed": authorization.allowed,
+                    "security_state": decision.proposed_state.name,
+                    "compliance_streak": trust.compliance_streak,
+                    "sensitivity": telemetry.get("sensitivity", 0.3),
+                    "velocity": telemetry.get("velocity", 1.0),
+                    "canary_tripped": telemetry.get("canary_tripped", False),
+                    "untrustworthy": trust.untrustworthy,
+                    "trustworthy": trust.trustworthy,
+                    "uncertainty": trust.uncertainty,
+                })
+                ws_manager.broadcast_sync(envelope)
+            except Exception:
+                pass
+
             return RuntimeResult(
                 authorization=authorization,
                 security_state=decision.proposed_state,
@@ -187,6 +255,7 @@ class SecurityRuntime:
                 uncertainty=trust.uncertainty,
                 conflict=trust.last_conflict,
                 isolation_required=revocation.isolation_required,
+                telemetry=telemetry,
             )
 
     def get_security_state(

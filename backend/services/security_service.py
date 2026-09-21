@@ -28,9 +28,9 @@ class SecurityService:
         self.store = CapabilityStore()
         self.manager = CapabilityManager(self.store)
         self.monitor = ReferenceMonitor(self.store)
-        self.evidence_mapper = EvidenceMapper()
+        self.evidence_mapper = EvidenceMapper(use_dynamic=True)
         self.ds_engine = DempsterShaferEngine()
-        self.policy_engine = AdaptivePolicyEngine()
+        self.policy_engine = AdaptivePolicyEngine(allow_dynamic_recovery=True)
         self.revocation_controller = RevocationController(self.manager)
         self.isolation_manager = isolation_manager
         self.workspace_root = workspace_root or Path("./sandbox/workspace").resolve()

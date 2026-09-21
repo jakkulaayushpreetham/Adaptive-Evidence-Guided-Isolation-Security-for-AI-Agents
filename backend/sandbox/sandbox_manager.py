@@ -126,6 +126,43 @@ class SandboxManager:
             record.container_id
         )
 
+    def pause(
+        self,
+        *,
+        agent_id: str,
+        task_id: str,
+    ) -> ContainerInfo:
+        record = self.require(
+            agent_id=agent_id,
+            task_id=task_id,
+        )
+        return self._docker.pause(record.container_id)
+
+    def unpause(
+        self,
+        *,
+        agent_id: str,
+        task_id: str,
+    ) -> ContainerInfo:
+        record = self.require(
+            agent_id=agent_id,
+            task_id=task_id,
+        )
+        return self._docker.unpause(record.container_id)
+
+    def throttle(
+        self,
+        *,
+        agent_id: str,
+        task_id: str,
+        nano_cpus: int = 100_000_000,
+    ) -> ContainerInfo:
+        record = self.require(
+            agent_id=agent_id,
+            task_id=task_id,
+        )
+        return self._docker.throttle_cpu(record.container_id, nano_cpus=nano_cpus)
+
     def require(
         self,
         *,

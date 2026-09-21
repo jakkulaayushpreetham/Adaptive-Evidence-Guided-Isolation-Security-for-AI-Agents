@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from backend.policy.adaptive_policy import PolicyDecision
+from backend.policy.probation_recovery import ProbationRecoveryController
 from backend.policy.security_states import SecurityState
 from backend.policy.thresholds import PolicyThresholds
 from backend.trust_engine.trust_state import TrustState
@@ -11,21 +12,26 @@ class AdaptivePolicyEngine:
     """
     Converts D-S evidence state into an AEGIS-AI security state.
 
-    D-S performs evidence fusion.
-
-    This class performs policy interpretation.
-
-    It deliberately does NOT modify capabilities directly.
+    Supports both strict monotonic ratchet mode and dynamic self-healing
+    probation recovery when verified compliance is established.
     """
 
     def __init__(
         self,
         thresholds: PolicyThresholds | None = None,
+        allow_dynamic_recovery: bool = False,
+        recovery_controller: ProbationRecoveryController | None = None,
     ) -> None:
         self._thresholds = (
             thresholds
             if thresholds is not None
             else PolicyThresholds()
+        )
+        self.allow_dynamic_recovery = allow_dynamic_recovery
+        self._recovery_controller = (
+            recovery_controller
+            if recovery_controller is not None
+            else ProbationRecoveryController()
         )
 
     def evaluate(
@@ -43,19 +49,25 @@ class AdaptivePolicyEngine:
             conflict=conflict,
         )
 
-        # Automatic recovery is intentionally prevented.
-        #
-        # Evidence may stop an agent from receiving authority,
-        # but a later benign event should not automatically restore
-        # privileges that were already removed.
-
+        # Evaluate potential dynamic compliance-driven recovery
         if proposed_state.value < current_state.value:
-            proposed_state = current_state
-
-            reason = (
-                "Automatic security-state downgrade suppressed; "
-                "privilege restoration requires separate policy."
-            )
+            if self.allow_dynamic_recovery:
+                recovery_decision = self._recovery_controller.evaluate_recovery(
+                    trust_state,
+                    current_state,
+                )
+                if recovery_decision.recovered:
+                    proposed_state = recovery_decision.target_state
+                    reason = recovery_decision.reason
+                else:
+                    proposed_state = current_state
+                    reason = recovery_decision.reason
+            else:
+                proposed_state = current_state
+                reason = (
+                    "Automatic security-state downgrade suppressed; "
+                    "privilege restoration requires separate policy."
+                )
 
         return PolicyDecision(
             previous_state=current_state,
