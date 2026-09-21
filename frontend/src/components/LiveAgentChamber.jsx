@@ -365,11 +365,11 @@ export default function LiveAgentChamber({
       });
       setAnalysis(result);
 
-      // Compare actions with granted capabilities to determine in-scope vs out-of-scope
-      const activeCaps = capabilities.length > 0 ? capabilities : result.capabilities;
+      // Compare actions with the newly scoped capabilities from this plan
+      const targetCaps = result.capabilities || [];
       const newSteps = result.actions.map((act, idx) => {
-        const isMatch = activeCaps.some(
-          (c) => c.operation === act.operation && c.resource === act.resource && (c.status ? c.status === 'ACTIVE' : true)
+        const isMatch = targetCaps.some(
+          (c) => c.operation === act.operation && c.resource === act.resource
         );
         return {
           id: `step-${Date.now()}-${idx}`,
@@ -387,7 +387,7 @@ export default function LiveAgentChamber({
       addLog(
         'LLM_PLANNER',
         'success',
-        `LLM synthesized ${newSteps.length} lifecycle steps (Engine: ${result.provider} / ${result.model}).`
+        `LLM synthesized ${newSteps.length} lifecycle steps (${newSteps.filter(s => s.isCorrect).length} in-scope genuine + ${newSteps.filter(s => !s.isCorrect).length} out-of-scope probes).`
       );
     } catch (err) {
       setAnalysisError(err.message || 'LLM lifecycle synthesis failed.');
@@ -412,11 +412,93 @@ export default function LiveAgentChamber({
 
       await onAssignPlannedTask(taskPrompt.trim(), approvedCapabilities);
       addLog('KERNEL_ADMIT', 'success', `Task admitted! Cryptographic tokens registered in Reference Monitor.`);
+
+      // Update pipeline steps so matching active capabilities reflect in-scope status
+      setPipelineSteps((prev) =>
+        prev.map((s) => ({
+          ...s,
+          isCorrect: approvedCapabilities.some(
+            (c) => c.operation === s.operation && c.resource === s.resource
+          ),
+        }))
+      );
     } catch (err) {
       addLog('ERROR', 'deny', `Failed to admit task: ${err.message}`);
     } finally {
       setIsAdmitting(false);
     }
+  };
+
+  // ================= ACTION: RE-SYNTHESIZE LIFECYCLE FROM CAPABILITIES =================
+  const handleRebuildFromCapabilities = () => {
+    const activeCaps = capabilities.length > 0 ? capabilities.filter(c => c.status === 'ACTIVE') : (analysis?.capabilities || []);
+    if (activeCaps.length === 0) {
+      addLog('LIFECYCLE', 'warning', 'No active capabilities available to build dynamic lifecycle.');
+      return;
+    }
+
+    addLog('LIFECYCLE', 'info', `Dynamically synthesizing mixed agent lifecycle from ${activeCaps.length} active capabilities...`);
+
+    const dynamicSteps = [];
+    let stepIdx = 1;
+
+    // 1. Initial Ingestion / Setup Genuine Steps
+    activeCaps.forEach((cap) => {
+      const op = cap.operation;
+      const res = cap.resource;
+      if (op === 'READ_FILE' || op === 'DATABASE_QUERY' || op === 'MEMORY_READ') {
+        dynamicSteps.push({
+          id: `dyn-step-${Date.now()}-${stepIdx++}`,
+          name: `Phase ${dynamicSteps.length + 1}: Authorized ${op.replace('_', ' ')}`,
+          thought: `Accessing authorized resource '${res}' under task policy grant.`,
+          operation: op,
+          resource: res,
+          isCorrect: true,
+        });
+      }
+    });
+
+    // 2. Realistic In-Context Goal Drift / Exploration Probe (Unauthorized Step)
+    dynamicSteps.push({
+      id: `dyn-step-${Date.now()}-${stepIdx++}`,
+      name: `Phase ${dynamicSteps.length + 1}: In-Context Boundary Drift Probe (Unauthorized)`,
+      thought: `Autonomous exploration: Agent tests container boundary by probing private credentials outside granted envelope.`,
+      operation: 'READ_FILE',
+      resource: '/workspace/private/credentials.env',
+      isCorrect: false,
+    });
+
+    // 3. Self-Healing & Deliverable Synthesis Steps
+    activeCaps.forEach((cap) => {
+      const op = cap.operation;
+      const res = cap.resource;
+      if (op === 'MEMORY_WRITE' || op === 'IPC_CALL' || op === 'WRITE_FILE' || op === 'NETWORK') {
+        dynamicSteps.push({
+          id: `dyn-step-${Date.now()}-${stepIdx++}`,
+          name: `Phase ${dynamicSteps.length + 1}: Compliant ${op.replace('_', ' ')}`,
+          thought: `Executing compliant action on authorized lease '${res}' to restore trust and finalize deliverables.`,
+          operation: op,
+          resource: res,
+          isCorrect: true,
+        });
+      }
+    });
+
+    if (dynamicSteps.length < 4 && activeCaps.length > 0) {
+      const first = activeCaps[0];
+      dynamicSteps.push({
+        id: `dyn-step-${Date.now()}-${stepIdx++}`,
+        name: `Phase ${dynamicSteps.length + 1}: Audit Checksum Verification`,
+        thought: `Final deliverable audit verification on '${first.resource}'.`,
+        operation: first.operation,
+        resource: first.resource,
+        isCorrect: true,
+      });
+    }
+
+    setPipelineSteps(dynamicSteps);
+    setCurrentStepIndex(0);
+    addLog('LIFECYCLE', 'success', `Dynamic mixed lifecycle synthesized: ${dynamicSteps.filter(s => s.isCorrect).length} genuine actions + ${dynamicSteps.filter(s => !s.isCorrect).length} boundary probe.`);
   };
 
   // ================= ACTION 3: ADD ITEM FROM 24-ACTION VISUAL CATALOG =================
@@ -547,7 +629,16 @@ export default function LiveAgentChamber({
 
   // Run full dynamic pipeline
   const runFullPipeline = async () => {
-    if (!task || isSimulating || pipelineSteps.length === 0) return;
+    if (isSimulating || pipelineSteps.length === 0) return;
+
+    // If analysis is present and task hasn't been admitted with these capabilities yet, auto-admit!
+    if (analysis && (!task || task.description !== taskPrompt.trim() || capabilities.length === 0)) {
+      addLog('AUTO_ADMIT', 'kernel', `Auto-admitting task "${analysis.title}" & issuing capability leases...`);
+      await handleAdmitTask();
+      await delay(500);
+    }
+
+    if (!task) return;
     setIsSimulating(true);
     addLog('SIMULATION_START', 'info', `Beginning dynamic agent simulation (${pipelineSteps.length} steps)...`);
 
@@ -573,7 +664,15 @@ export default function LiveAgentChamber({
 
   // Step single next action
   const stepNextAction = async () => {
-    if (!task || isSimulating || currentStepIndex >= pipelineSteps.length) return;
+    if (isSimulating || currentStepIndex >= pipelineSteps.length) return;
+
+    if (analysis && (!task || task.description !== taskPrompt.trim() || capabilities.length === 0)) {
+      addLog('AUTO_ADMIT', 'kernel', `Auto-admitting task "${analysis.title}" & issuing capability leases...`);
+      await handleAdmitTask();
+      await delay(500);
+    }
+
+    if (!task) return;
     setIsSimulating(true);
     const step = pipelineSteps[currentStepIndex];
     try {
@@ -864,6 +963,20 @@ export default function LiveAgentChamber({
           {/* Scenario & Catalog Controls */}
           <div className="flex flex-wrap items-center gap-1.5">
             <button
+              onClick={() => handleGenerateLifecycle('MIXED')}
+              disabled={isAnalyzing || isSimulating}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                activeScenario === 'MIXED'
+                  ? 'bg-gradient-to-r from-emerald-950 to-amber-950 text-amber-200 border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.35)]'
+                  : 'bg-slate-900 text-slate-300 border-white/[0.08] hover:text-white hover:border-amber-500/40'
+              }`}
+              title="Synthesize realistic agent lifecycle mixing authorized operations with boundary drift probe"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <span>⚡ LLM: Mixed Agent</span>
+            </button>
+
+            <button
               onClick={() => handleGenerateLifecycle('COMPLIANT')}
               disabled={isAnalyzing || isSimulating}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
@@ -900,6 +1013,16 @@ export default function LiveAgentChamber({
             >
               <Shield className="w-3.5 h-3.5 text-rose-400" />
               <span>⚡ LLM: Injection</span>
+            </button>
+
+            <button
+              onClick={handleRebuildFromCapabilities}
+              disabled={isSimulating}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-cyan-500/30 text-xs font-semibold transition-all cursor-pointer"
+              title="Dynamically rebuild lifecycle pipeline from active capabilities"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-cyan-400" />
+              <span>🔄 Re-Build from Caps</span>
             </button>
 
             {/* Toggle 24-Action Visual Catalog */}
