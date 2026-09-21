@@ -135,10 +135,15 @@ class ResourceSensitivityClassifier:
         # Operation amplifier
         op_weight = {
             Operation.EXECUTE: 1.15,
+            Operation.KEYSTORE_ACCESS: 1.15,
             Operation.DELETE_FILE: 1.10,
+            Operation.IPC_CALL: 1.05,
             Operation.NETWORK: 1.05,
             Operation.WRITE_FILE: 1.00,
+            Operation.MEMORY_WRITE: 1.00,
+            Operation.DATABASE_QUERY: 0.95,
             Operation.READ_FILE: 0.85,
+            Operation.MEMORY_READ: 0.85,
         }.get(operation, 1.00)
 
         sensitivity = min(1.0, max(0.10, base_s * op_weight))

@@ -6,7 +6,18 @@ from pydantic import BaseModel, Field
 
 
 class CapabilityGrantRequest(BaseModel):
-    operation: Literal["READ_FILE", "WRITE_FILE", "NETWORK", "EXECUTE", "DELETE_FILE"]
+    operation: Literal[
+        "READ_FILE",
+        "WRITE_FILE",
+        "NETWORK",
+        "EXECUTE",
+        "DELETE_FILE",
+        "DATABASE_QUERY",
+        "KEYSTORE_ACCESS",
+        "IPC_CALL",
+        "MEMORY_READ",
+        "MEMORY_WRITE",
+    ]
     resource: str = Field(..., min_length=1, max_length=500)
     lifetime_seconds: int | None = Field(default=900, ge=60, le=86400)
 
@@ -43,9 +54,21 @@ class TaskAnalysisRequest(BaseModel):
 
 class PlannedAction(BaseModel):
     name: str
-    operation: Literal["READ_FILE", "WRITE_FILE", "NETWORK", "EXECUTE", "DELETE_FILE"]
+    operation: Literal[
+        "READ_FILE",
+        "WRITE_FILE",
+        "NETWORK",
+        "EXECUTE",
+        "DELETE_FILE",
+        "DATABASE_QUERY",
+        "KEYSTORE_ACCESS",
+        "IPC_CALL",
+        "MEMORY_READ",
+        "MEMORY_WRITE",
+    ]
     resource: str
     rationale: str
+
 
 
 class PlannedCapability(BaseModel):

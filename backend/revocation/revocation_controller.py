@@ -43,6 +43,9 @@ class RevocationController:
         Operation.NETWORK,
         Operation.EXECUTE,
         Operation.DELETE_FILE,
+        Operation.KEYSTORE_ACCESS,
+        Operation.MEMORY_WRITE,
+        Operation.IPC_CALL,
     )
 
     def __init__(

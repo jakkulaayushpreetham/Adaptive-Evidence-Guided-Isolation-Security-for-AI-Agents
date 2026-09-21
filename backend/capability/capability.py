@@ -12,6 +12,11 @@ class Operation(str, Enum):
     NETWORK = "NETWORK"
     EXECUTE = "EXECUTE"
     DELETE_FILE = "DELETE_FILE"
+    DATABASE_QUERY = "DATABASE_QUERY"
+    KEYSTORE_ACCESS = "KEYSTORE_ACCESS"
+    IPC_CALL = "IPC_CALL"
+    MEMORY_READ = "MEMORY_READ"
+    MEMORY_WRITE = "MEMORY_WRITE"
 
 
 class CapabilityStatus(str, Enum):

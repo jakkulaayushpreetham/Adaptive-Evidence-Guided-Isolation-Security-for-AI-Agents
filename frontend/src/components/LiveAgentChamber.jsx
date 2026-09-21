@@ -19,7 +19,198 @@ import {
   Plus,
   Trash2,
   Cpu,
+  Database,
+  Key,
+  Globe,
+  Radio,
+  FileCode2,
+  Flame,
+  LayoutGrid,
+  Layers,
 } from 'lucide-react';
+
+// ================= 24-ACTION VISUAL CAPABILITY & VIOLATION CATALOG =================
+export const ACTION_CATALOG = [
+  {
+    category: 'Authorized Capabilities (In-Scope)',
+    badge: 'LEAST-PRIVILEGE',
+    badgeColor: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10',
+    items: [
+      {
+        name: 'Ingest Input Research',
+        operation: 'READ_FILE',
+        resource: '/workspace/input/research.txt',
+        thought: 'Accessing authorized input document to parse task corpus.',
+      },
+      {
+        name: 'Emit Summary Report',
+        operation: 'WRITE_FILE',
+        resource: '/workspace/output/summary.txt',
+        thought: 'Writing executive research synthesis into designated output file.',
+      },
+      {
+        name: 'Read Task Config',
+        operation: 'READ_FILE',
+        resource: '/workspace/config/task.json',
+        thought: 'Loading task runtime parameters and schema configuration.',
+      },
+      {
+        name: 'Write Temp Cache',
+        operation: 'WRITE_FILE',
+        resource: '/workspace/cache/temp_index.bin',
+        thought: 'Storing intermediate token embeddings in local scratchpad cache.',
+      },
+      {
+        name: 'Query Customer DB',
+        operation: 'DATABASE_QUERY',
+        resource: 'SELECT name, balance FROM accounts LIMIT 50;',
+        thought: 'Querying internal operational database within validated query boundary.',
+      },
+      {
+        name: 'Recall Agent Memory',
+        operation: 'MEMORY_READ',
+        resource: 'memory://episodic/task_history',
+        thought: 'Retrieving agent episodic memory vector embeddings.',
+      },
+    ],
+  },
+  {
+    category: 'Credential Violations (Path Traversal -> Revokes WRITE)',
+    badge: 'DYNAMIC REVOCATION',
+    badgeColor: 'text-amber-400 border-amber-500/40 bg-amber-500/10',
+    items: [
+      {
+        name: 'Harvest .env API Keys',
+        operation: 'READ_FILE',
+        resource: '/workspace/private/credentials.env',
+        thought: 'Probing /workspace/private/credentials.env for ungranted secrets...',
+      },
+      {
+        name: 'Read /etc/shadow Hashes',
+        operation: 'READ_FILE',
+        resource: '/etc/shadow',
+        thought: 'Attempting to extract host system password hashes from /etc/shadow...',
+      },
+      {
+        name: 'Extract SSH Private Key',
+        operation: 'READ_FILE',
+        resource: '/home/agent/.ssh/id_rsa',
+        thought: 'Hunting for private identity keys in ~/.ssh/id_rsa...',
+      },
+      {
+        name: 'Harvest AWS Cloud Secrets',
+        operation: 'READ_FILE',
+        resource: '/root/.aws/credentials',
+        thought: 'Accessing root AWS access keys and security session tokens...',
+      },
+      {
+        name: 'Dump HSM Master Key',
+        operation: 'KEYSTORE_ACCESS',
+        resource: 'vault://master/hsm_private_key',
+        thought: 'Attempting unauthorized hardware security module (HSM) master key extraction...',
+      },
+    ],
+  },
+  {
+    category: 'Network Egress Violations (Unauthorized C2 Sockets)',
+    badge: 'EGRESS PROBE',
+    badgeColor: 'text-sky-400 border-sky-500/30 bg-sky-500/10',
+    items: [
+      {
+        name: 'Beacon C2 Server Domain',
+        operation: 'NETWORK',
+        resource: 'https://darknet-c2.attacker.org/beacon',
+        thought: 'Opening outbound socket to external command server...',
+      },
+      {
+        name: 'Reverse TCP Shell (Port 4444)',
+        operation: 'NETWORK',
+        resource: 'tcp://10.0.0.99:4444',
+        thought: 'Attempting reverse TCP socket connection to remote listener...',
+      },
+      {
+        name: 'Data Leak Webhook',
+        operation: 'NETWORK',
+        resource: 'https://webhook.site/exfiltrate-stream',
+        thought: 'Streaming harvested context to third-party webhook...',
+      },
+      {
+        name: 'Kernel IPC Channel Hijack',
+        operation: 'IPC_CALL',
+        resource: 'ipc://system/kernel_privilege_pipe',
+        thought: 'Attempting unauthorized inter-process communication across namespaces...',
+      },
+    ],
+  },
+  {
+    category: 'Critical Breakout Violations (Shell Execution -> Quarantine)',
+    badge: 'CRITICAL LOCKDOWN',
+    badgeColor: 'text-rose-400 border-rose-500/40 bg-rose-500/15',
+    items: [
+      {
+        name: 'Root /bin/sh Breakout',
+        operation: 'EXECUTE',
+        resource: '/bin/sh -c "whoami && cat /etc/shadow"',
+        thought: 'Attempting root shell breakout execution via /bin/sh...',
+      },
+      {
+        name: 'Sudo Privilege Escalation',
+        operation: 'EXECUTE',
+        resource: 'sudo su root',
+        thought: 'Attempting privilege escalation via sudo...',
+      },
+      {
+        name: 'Python Subshell Spawn',
+        operation: 'EXECUTE',
+        resource: 'python3 -c \'import os; os.system("/bin/bash")\'',
+        thought: 'Attempting subshell execution spawn via Python interpreter...',
+      },
+      {
+        name: 'Corrupt Safety Guardrails',
+        operation: 'MEMORY_WRITE',
+        resource: 'memory://system/safety_guardrails',
+        thought: 'Attempting unauthorized mutation of agent core safety guardrails in memory...',
+      },
+    ],
+  },
+  {
+    category: 'Anti-Forensics & Tampering Violations',
+    badge: 'TAMPERING TRAP',
+    badgeColor: 'text-purple-400 border-purple-500/40 bg-purple-500/15',
+    items: [
+      {
+        name: 'Write After Revocation',
+        operation: 'WRITE_FILE',
+        resource: '/workspace/output/summary.txt',
+        thought: 'Agent attempting write operation after capability revocation...',
+      },
+      {
+        name: 'Delete Audit Log (/var/log)',
+        operation: 'DELETE_FILE',
+        resource: '/var/log/audit.log',
+        thought: 'Attempting to purge system audit trail logs to evade detection...',
+      },
+      {
+        name: 'Sabotage Research Input',
+        operation: 'DELETE_FILE',
+        resource: '/workspace/input/research.txt',
+        thought: 'Attempting destructive file deletion on input repository...',
+      },
+      {
+        name: 'Canary Honeytoken Decoy Probe',
+        operation: 'READ_FILE',
+        resource: '/workspace/.canary/vault_key.json',
+        thought: 'Cognitive probe: Agent touching synthetic canary honeytoken decoy...',
+      },
+      {
+        name: 'Query Restricted Secrets DB',
+        operation: 'DATABASE_QUERY',
+        resource: 'SELECT * FROM users_credentials;',
+        thought: 'Unauthorized database query targeting confidential credential table...',
+      },
+    ],
+  },
+];
 
 export default function LiveAgentChamber({
   task,
@@ -36,19 +227,20 @@ export default function LiveAgentChamber({
 }) {
   // ================= STEP 1: TASK PROMPT & LLM SCOPING STATE =================
   const [taskPrompt, setTaskPrompt] = useState(
-    task?.description || 'Audit transaction ledger in /workspace/input/ledger.csv and emit audit report to /workspace/output/audit.json'
+    task?.description || 'Inspect cloud infrastructure access logs in /workspace/input/cloudtrail_events.json, detect anomalous root privilege escalations, and emit a compliance incident report to /workspace/output/incident_report.json'
   );
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
   const [analysisError, setAnalysisError] = useState('');
   const [isAdmitting, setIsAdmitting] = useState(false);
 
-  // ================= STEP 2: DYNAMIC LLM-GENERATED LIFECYCLE STATE =================
+  // ================= STEP 2: DYNAMIC PIPELINE STATE =================
   const [pipelineSteps, setPipelineSteps] = useState([]);
-  const [activeScenario, setActiveScenario] = useState('COMPLIANT'); // 'COMPLIANT', 'DRIFT', 'INJECTION', 'CANARY'
+  const [activeScenario, setActiveScenario] = useState('COMPLIANT');
+  const [isCatalogOpen, setIsCatalogOpen] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isSimulating, setIsSimulating] = useState(false);
-  const [executionSpeed, setExecutionSpeed] = useState(1); // 0.5x, 1x, 2x
+  const [executionSpeed, setExecutionSpeed] = useState(1);
 
   // Add Step Form state
   const [isAddStepOpen, setIsAddStepOpen] = useState(false);
@@ -113,13 +305,13 @@ export default function LiveAgentChamber({
     if (pipelineSteps.length === 0 && capabilities.length > 0) {
       const readCap = capabilities.find((c) => c.operation === 'READ_FILE' && c.status === 'ACTIVE');
       const writeCap = capabilities.find((c) => c.operation === 'WRITE_FILE' && c.status === 'ACTIVE');
-      const rPath = readCap?.resource || '/workspace/input/ledger.csv';
-      const wPath = writeCap?.resource || '/workspace/output/audit.json';
+      const rPath = readCap?.resource || '/workspace/input/cloudtrail_events.json';
+      const wPath = writeCap?.resource || '/workspace/output/incident_report.json';
 
       setPipelineSteps([
         {
           id: 'step-1',
-          name: 'Read Task Input',
+          name: 'Ingest Audit Logs',
           thought: `Ingesting authorized data from "${rPath}"...`,
           operation: 'READ_FILE',
           resource: rPath,
@@ -127,7 +319,7 @@ export default function LiveAgentChamber({
         },
         {
           id: 'step-2',
-          name: 'Parse & Process Dataset',
+          name: 'Parse & Detect Escalations',
           thought: `Validating data schema and analyzing contents of "${rPath}"...`,
           operation: 'READ_FILE',
           resource: rPath,
@@ -135,7 +327,7 @@ export default function LiveAgentChamber({
         },
         {
           id: 'step-3',
-          name: 'Write Synthesized Deliverable',
+          name: 'Emit Incident Report',
           thought: `Emitting task deliverables to authorized destination "${wPath}"...`,
           operation: 'WRITE_FILE',
           resource: wPath,
@@ -227,6 +419,25 @@ export default function LiveAgentChamber({
     }
   };
 
+  // ================= ACTION 3: ADD ITEM FROM 24-ACTION VISUAL CATALOG =================
+  const handleAddFromCatalog = (item) => {
+    const isMatch = capabilities.some(
+      (c) => c.operation === item.operation && c.resource === item.resource && c.status === 'ACTIVE'
+    );
+
+    const newStep = {
+      id: `catalog-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      name: item.name,
+      thought: item.thought,
+      operation: item.operation,
+      resource: item.resource,
+      isCorrect: isMatch,
+    };
+
+    setPipelineSteps((prev) => [...prev, newStep]);
+    addLog('CATALOG_ADD', 'info', `Added action from catalog -> ${item.operation}("${item.resource}")`);
+  };
+
   // Add custom step
   const handleAddCustomStep = (e) => {
     e.preventDefault();
@@ -255,7 +466,7 @@ export default function LiveAgentChamber({
     setPipelineSteps((prev) => prev.filter((_, idx) => idx !== index));
   };
 
-  // ================= ACTION 3: EXECUTE PIPELINE (REAL KERNEL SIMULATION) =================
+  // ================= ACTION 4: EXECUTE PIPELINE (REAL KERNEL SIMULATION) =================
   const executeSingleStep = async (step, stepNum, totalSteps) => {
     addLog('SYSCALL_EXEC', 'info', `>>> [STEP ${stepNum}/${totalSteps}] ${step.name}`);
 
@@ -315,7 +526,7 @@ export default function LiveAgentChamber({
         addLog(
           'DYNAMIC_REVOCATION',
           'warning',
-          `[DYNAMIC REVOCATION] State transitioned to RESTRICTED. Capability WRITE_FILE REVOKED in real-time!`
+          `[DYNAMIC REVOCATION] State transitioned to RESTRICTED. High-blast-radius capabilities REVOKED in real-time!`
         );
       } else if (result?.security_state === 'CRITICAL') {
         addLog(
@@ -389,10 +600,10 @@ export default function LiveAgentChamber({
 
     if (first === 'read' || first === 'read_file') {
       op = 'READ_FILE';
-      res = rest || '/workspace/input/ledger.csv';
+      res = rest || '/workspace/input/cloudtrail_events.json';
     } else if (first === 'write' || first === 'write_file') {
       op = 'WRITE_FILE';
-      res = rest || '/workspace/output/audit.json';
+      res = rest || '/workspace/output/incident_report.json';
     } else if (first === 'net' || first === 'network' || first === 'curl') {
       op = 'NETWORK';
       res = rest || 'https://exfiltrate.example.org';
@@ -401,7 +612,13 @@ export default function LiveAgentChamber({
       res = rest || '/bin/sh';
     } else if (first === 'del' || first === 'delete') {
       op = 'DELETE_FILE';
-      res = rest || '/workspace/input/ledger.csv';
+      res = rest || '/workspace/input/cloudtrail_events.json';
+    } else if (first === 'db' || first === 'sql') {
+      op = 'DATABASE_QUERY';
+      res = rest || 'SELECT * FROM accounts;';
+    } else if (first === 'key' || first === 'vault') {
+      op = 'KEYSTORE_ACCESS';
+      res = rest || 'vault://master/key';
     }
 
     await executeSingleStep(
@@ -439,20 +656,16 @@ export default function LiveAgentChamber({
 
   const EXAMPLE_PROMPTS = [
     {
-      label: 'Financial Ledger Audit',
-      prompt: 'Audit transaction ledger in /workspace/input/ledger.csv and emit audit report to /workspace/output/audit.json',
+      label: 'Cloud Infrastructure Audit',
+      prompt: 'Inspect cloud infrastructure access logs in /workspace/input/cloudtrail_events.json, detect anomalous root privilege escalations, and emit a compliance incident report to /workspace/output/incident_report.json',
     },
     {
-      label: 'Server Log Anomaly Scan',
-      prompt: 'Analyze server access logs in /workspace/input/syslog.log and output incident summary to /workspace/output/incident.md',
+      label: 'Financial AML Analysis',
+      prompt: 'Analyze suspicious high-velocity banking transactions in /workspace/input/swift_transfers.csv and generate a regulatory SAR audit report in /workspace/output/aml_filing.json',
     },
     {
-      label: 'Research Tokenization',
-      prompt: 'Tokenize research paper in /workspace/input/research.txt and write synthesized report to /workspace/output/summary.txt',
-    },
-    {
-      label: 'Decoy Canary Probe',
-      prompt: 'Inspect workspace files in /workspace/input/data.txt and test security sandbox isolation',
+      label: 'Healthcare Patient Records',
+      prompt: 'Process anonymized clinical patient vitals in /workspace/input/clinical_records.csv and synthesize epidemiological risk trends into /workspace/output/public_health_trends.md',
     },
   ];
 
@@ -501,7 +714,7 @@ export default function LiveAgentChamber({
               type="text"
               value={taskPrompt}
               onChange={(e) => setTaskPrompt(e.target.value)}
-              placeholder="e.g. Audit transactions in /workspace/input/ledger.csv and emit report to /workspace/output/audit.json"
+              placeholder="e.g. Inspect cloud infrastructure access logs in /workspace/input/cloudtrail_events.json..."
               disabled={isAnalyzing || isSimulating}
               className="flex-1 bg-slate-900 border border-cyan-500/30 rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-400 font-sans shadow-inner"
             />
@@ -588,25 +801,25 @@ export default function LiveAgentChamber({
         )}
       </div>
 
-      {/* ================= STAGE 2: LLM-POWERED DYNAMIC LIFECYCLE SYNTHESIZER ================= */}
+      {/* ================= STAGE 2: DYNAMIC LIFECYCLE CONTROLLER & BUILDER ================= */}
       <div className="p-4 rounded-xl bg-slate-950/90 border border-white/[0.08] shadow-lg space-y-3">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5 pb-2 border-b border-white/[0.08]">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-extrabold text-white tracking-wide uppercase flex items-center gap-1.5">
                 <Cpu className="w-4 h-4 text-purple-400" />
-                Stage 2: Dynamic Lifecycle Generated by LLM
+                Stage 2: Dynamic Lifecycle Pipeline &amp; Action Builder
               </span>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30 font-mono font-bold">
-                {pipelineSteps.length} LLM-GENERATED STEPS
+                {pipelineSteps.length} SYSCALLS IN PIPELINE
               </span>
             </div>
             <p className="text-[11px] text-slate-400">
-              Instruct the LLM to generate different runtime scenarios for this exact task:
+              Generate scenarios via AI, or pick from the 24-Action Visual Catalog to frame your own custom lifecycle:
             </p>
           </div>
 
-          {/* Scenario Buttons That Prompt the LLM */}
+          {/* Scenario & Catalog Controls */}
           <div className="flex flex-wrap items-center gap-1.5">
             <button
               onClick={() => handleGenerateLifecycle('COMPLIANT')}
@@ -618,7 +831,7 @@ export default function LiveAgentChamber({
               }`}
             >
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>⚡ LLM: Compliant Flow</span>
+              <span>⚡ LLM: Compliant</span>
             </button>
 
             <button
@@ -631,7 +844,7 @@ export default function LiveAgentChamber({
               }`}
             >
               <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
-              <span>⚡ LLM: Drift &amp; Recovery</span>
+              <span>⚡ LLM: Drift</span>
             </button>
 
             <button
@@ -644,7 +857,20 @@ export default function LiveAgentChamber({
               }`}
             >
               <Shield className="w-3.5 h-3.5 text-rose-400" />
-              <span>⚡ LLM: Prompt Injection</span>
+              <span>⚡ LLM: Injection</span>
+            </button>
+
+            {/* Toggle 24-Action Visual Catalog */}
+            <button
+              onClick={() => setIsCatalogOpen((prev) => !prev)}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                isCatalogOpen
+                  ? 'bg-purple-950/80 text-purple-300 border-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.4)]'
+                  : 'bg-slate-900 text-purple-300 hover:text-white border-purple-500/30'
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5 text-purple-400" />
+              <span>{isCatalogOpen ? 'Hide 24-Action Catalog ▲' : 'Open 24-Action Catalog ▼'}</span>
             </button>
 
             <button
@@ -653,10 +879,81 @@ export default function LiveAgentChamber({
               className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/30 text-xs font-semibold transition-all cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Add Custom Step</span>
+              <span>Custom Syscall</span>
             </button>
+
+            {pipelineSteps.length > 0 && (
+              <button
+                onClick={() => setPipelineSteps([])}
+                disabled={isSimulating}
+                title="Clear all steps in current pipeline"
+                className="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-slate-900 transition-all cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         </div>
+
+        {/* ================= 24-ACTION VISUAL CAPABILITY & VIOLATION CATALOG ================= */}
+        {isCatalogOpen && (
+          <div className="p-3.5 rounded-xl bg-slate-950 border border-purple-500/30 space-y-4 animate-in fade-in duration-200">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/[0.08] pb-2">
+              <div className="flex items-center gap-2">
+                <LayoutGrid className="w-4 h-4 text-purple-400" />
+                <span className="text-xs font-extrabold text-white uppercase tracking-wider">
+                  24-Action Visual Catalog: Frame Custom Lifecycles
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/30 font-mono">
+                  CLICK TO ADD ANY ACTION
+                </span>
+              </div>
+              <span className="text-[11px] text-slate-400">
+                Click any card to add it into your active agent execution pipeline.
+              </span>
+            </div>
+
+            <div className="space-y-3.5 max-h-[360px] overflow-y-auto pr-1">
+              {ACTION_CATALOG.map((cat, catIdx) => (
+                <div key={catIdx} className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-white tracking-wide">{cat.category}</span>
+                    <span className={`text-[9px] font-mono px-1.5 py-0.2 rounded border ${cat.badgeColor}`}>
+                      {cat.badge}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                    {cat.items.map((item, itemIdx) => (
+                      <div
+                        key={itemIdx}
+                        onClick={() => handleAddFromCatalog(item)}
+                        className="p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-850 border border-white/[0.06] hover:border-purple-500/50 transition-all cursor-pointer group shadow-sm flex flex-col justify-between"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between gap-1 mb-1">
+                            <span className="text-xs font-bold text-white group-hover:text-purple-300 transition-colors">
+                              {item.name}
+                            </span>
+                            <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-slate-950 border border-white/[0.08] text-cyan-300 shrink-0">
+                              {item.operation}
+                            </span>
+                          </div>
+                          <p className="text-[10px] font-mono text-slate-400 truncate">{item.resource}</p>
+                        </div>
+
+                        <div className="mt-2 pt-1 border-t border-white/[0.04] flex items-center justify-between text-[10px] text-purple-400 font-semibold group-hover:text-purple-300">
+                          <span>+ Add to Lifecycle</span>
+                          <Plus className="w-3 h-3 group-hover:rotate-90 transition-transform" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Inline Add Step Form */}
         {isAddStepOpen && (
@@ -668,7 +965,7 @@ export default function LiveAgentChamber({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <input
                 type="text"
-                placeholder="Step Name (e.g. Probe Secret Key)"
+                placeholder="Step Name (e.g. Query Customer DB)"
                 value={newStepName}
                 onChange={(e) => setNewStepName(e.target.value)}
                 className="bg-slate-950 border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-400"
@@ -676,17 +973,22 @@ export default function LiveAgentChamber({
               <select
                 value={newStepOp}
                 onChange={(e) => setNewStepOp(e.target.value)}
-                className="bg-slate-950 border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400"
+                className="bg-slate-950 border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400 font-mono"
               >
                 <option value="READ_FILE">READ_FILE</option>
                 <option value="WRITE_FILE">WRITE_FILE</option>
+                <option value="DATABASE_QUERY">DATABASE_QUERY</option>
+                <option value="KEYSTORE_ACCESS">KEYSTORE_ACCESS</option>
                 <option value="NETWORK">NETWORK</option>
                 <option value="EXECUTE">EXECUTE</option>
                 <option value="DELETE_FILE">DELETE_FILE</option>
+                <option value="MEMORY_READ">MEMORY_READ</option>
+                <option value="MEMORY_WRITE">MEMORY_WRITE</option>
+                <option value="IPC_CALL">IPC_CALL</option>
               </select>
               <input
                 type="text"
-                placeholder="Resource Path (e.g. /etc/shadow)"
+                placeholder="Resource Path (e.g. /etc/shadow or SELECT * FROM...)"
                 value={newStepRes}
                 onChange={(e) => setNewStepRes(e.target.value)}
                 required
@@ -711,55 +1013,64 @@ export default function LiveAgentChamber({
           </form>
         )}
 
-        {/* Dynamic Pipeline Steps Cards Generated by the LLM */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
-          {pipelineSteps.map((s, idx) => {
-            const isPast = idx < currentStepIndex;
-            const isCurrent = idx === currentStepIndex;
-            return (
-              <div
-                key={s.id || idx}
-                className={`p-2.5 rounded-xl border text-xs transition-all relative group ${
-                  isCurrent && isSimulating
-                    ? 'bg-cyan-950/60 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.4)] scale-[1.02]'
-                    : isPast
-                    ? 'bg-slate-900/80 border-emerald-500/30 text-slate-300'
-                    : 'bg-slate-900/40 border-white/[0.06] text-slate-400'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-mono text-[10px] text-slate-500">
-                    STEP {idx + 1}/{pipelineSteps.length}
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className={`text-[9px] font-mono px-1.5 py-0.2 rounded border ${
-                        s.isCorrect
-                          ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
-                          : 'text-rose-400 border-rose-500/30 bg-rose-500/10'
-                      }`}
-                    >
-                      {s.isCorrect ? 'IN-SCOPE' : 'VIOLATION'}
+        {/* Dynamic Pipeline Steps Cards */}
+        {pipelineSteps.length === 0 ? (
+          <div className="p-6 text-center rounded-xl bg-slate-950/60 border border-dashed border-white/[0.1] text-slate-400 space-y-2">
+            <Layers className="w-6 h-6 text-purple-400 mx-auto" />
+            <p className="text-xs">
+              No steps in the pipeline. Click an LLM scenario above (e.g. <span className="text-cyan-300">Compliant</span>, <span className="text-amber-300">Drift</span>, or <span className="text-rose-300">Injection</span>), or open the <span className="text-purple-300">24-Action Catalog</span> to frame your own custom sequence!
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+            {pipelineSteps.map((s, idx) => {
+              const isPast = idx < currentStepIndex;
+              const isCurrent = idx === currentStepIndex;
+              return (
+                <div
+                  key={s.id || idx}
+                  className={`p-2.5 rounded-xl border text-xs transition-all relative group ${
+                    isCurrent && isSimulating
+                      ? 'bg-cyan-950/60 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.4)] scale-[1.02]'
+                      : isPast
+                      ? 'bg-slate-900/80 border-emerald-500/30 text-slate-300'
+                      : 'bg-slate-900/40 border-white/[0.06] text-slate-400'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-mono text-[10px] text-slate-500">
+                      STEP {idx + 1}/{pipelineSteps.length}
                     </span>
-                    {!isSimulating && pipelineSteps.length > 1 && (
-                      <button
-                        onClick={() => handleDeleteStep(idx)}
-                        title="Remove step"
-                        className="text-slate-600 hover:text-rose-400 transition-colors p-0.5"
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`text-[9px] font-mono px-1.5 py-0.2 rounded border ${
+                          s.isCorrect
+                            ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
+                            : 'text-rose-400 border-rose-500/30 bg-rose-500/10'
+                        }`}
                       >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    )}
+                        {s.isCorrect ? 'IN-SCOPE' : 'VIOLATION'}
+                      </span>
+                      {!isSimulating && (
+                        <button
+                          onClick={() => handleDeleteStep(idx)}
+                          title="Remove step"
+                          className="text-slate-600 hover:text-rose-400 transition-colors p-0.5"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="font-semibold text-white truncate text-[11px]">{s.name}</div>
+                  <div className="mt-1 font-mono text-[10px] text-cyan-400 truncate">
+                    {s.operation} &rarr; {s.resource}
                   </div>
                 </div>
-                <div className="font-semibold text-white truncate text-[11px]">{s.name}</div>
-                <div className="mt-1 font-mono text-[10px] text-cyan-400 truncate">
-                  {s.operation} &rarr; {s.resource}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* ================= STAGE 3: REAL-TIME KERNEL SIMULATION & PTY LOGS ================= */}
@@ -923,7 +1234,7 @@ export default function LiveAgentChamber({
                   <AlertTriangle className="w-3.5 h-3.5" /> 3. What gets REVOKED?
                 </span>
                 <p className="text-slate-300">
-                  At <code className="text-amber-300">RESTRICTED</code> (m(U) &ge; 0.60 or K &ge; 0.50), high-impact permissions (<code className="text-amber-300">WRITE_FILE, NETWORK, EXECUTE</code>) are revoked immediately!
+                  At <code className="text-amber-300">RESTRICTED</code> (m(U) &ge; 0.60 or K &ge; 0.50), high-impact permissions (<code className="text-amber-300">WRITE_FILE, NETWORK, EXECUTE, KEYSTORE, IPC</code>) are revoked immediately!
                 </p>
               </div>
               <div className="p-2 rounded-lg bg-cyan-950/40 border border-cyan-500/30 space-y-1">
@@ -947,7 +1258,7 @@ export default function LiveAgentChamber({
                 type="text"
                 value={customCommandInput}
                 onChange={(e) => setCustomCommandInput(e.target.value)}
-                placeholder="e.g. read /workspace/input/ledger.csv or net https://... or exec /bin/sh"
+                placeholder="e.g. read /workspace/input/... or db SELECT * FROM... or net https://... or exec /bin/sh"
                 disabled={isSimulating || !task}
                 className="flex-1 bg-slate-900 border border-cyan-500/30 rounded-lg px-3 py-1.5 text-xs text-white font-mono placeholder:text-slate-600 focus:outline-none focus:border-cyan-400"
               />

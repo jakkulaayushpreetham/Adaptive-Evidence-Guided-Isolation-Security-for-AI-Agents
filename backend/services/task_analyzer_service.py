@@ -34,8 +34,28 @@ from backend.config import (
 from backend.task_engine.policy_validator import CapabilityProposal, PolicyValidator
 
 
-ActionOperation = Literal["READ_FILE", "WRITE_FILE", "NETWORK", "EXECUTE", "DELETE_FILE"]
-GrantableOperation = Literal["READ_FILE", "WRITE_FILE", "NETWORK"]
+ActionOperation = Literal[
+    "READ_FILE",
+    "WRITE_FILE",
+    "NETWORK",
+    "EXECUTE",
+    "DELETE_FILE",
+    "DATABASE_QUERY",
+    "KEYSTORE_ACCESS",
+    "IPC_CALL",
+    "MEMORY_READ",
+    "MEMORY_WRITE",
+]
+GrantableOperation = Literal[
+    "READ_FILE",
+    "WRITE_FILE",
+    "NETWORK",
+    "DATABASE_QUERY",
+    "KEYSTORE_ACCESS",
+    "IPC_CALL",
+    "MEMORY_READ",
+    "MEMORY_WRITE",
+]
 RiskLevel = Literal["LOW", "MEDIUM", "HIGH"]
 
 
