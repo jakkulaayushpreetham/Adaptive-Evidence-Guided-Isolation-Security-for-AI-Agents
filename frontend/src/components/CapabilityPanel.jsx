@@ -159,7 +159,7 @@ export default function CapabilityPanel({ capabilities = [], securityState, task
   };
 
   return (
-    <div className="glass-panel p-4 flex flex-col justify-between space-y-3">
+    <div className="glass-panel p-4 flex flex-col justify-between space-y-3 h-full min-h-[290px] border border-white/[0.12] bg-gradient-to-b from-slate-900/90 via-slate-950/90 to-[#070b14]/95 backdrop-blur-xl shadow-2xl rounded-2xl relative overflow-hidden">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-white/[0.08]">
         <div className="flex items-center gap-2">

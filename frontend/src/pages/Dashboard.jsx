@@ -526,8 +526,8 @@ export default function Dashboard() {
           </div>
 
           {/* Middle Row: Capabilities & Dempster-Shafer Consensus */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-            <div className="md:col-span-6">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-stretch">
+            <div className="md:col-span-6 flex flex-col">
               <CapabilityPanel
                 capabilities={capabilities}
                 securityState={securityState}
@@ -535,7 +535,7 @@ export default function Dashboard() {
                 onRefresh={() => task?.task_id && loadTaskSnapshot(task.task_id)}
               />
             </div>
-            <div className="md:col-span-6">
+            <div className="md:col-span-6 flex flex-col">
               <TrustPanel trust={trust} />
             </div>
           </div>
