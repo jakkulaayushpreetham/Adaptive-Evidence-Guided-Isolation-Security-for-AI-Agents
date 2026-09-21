@@ -38,6 +38,7 @@ class TaskAnalysisRequest(BaseModel):
     """Task brief analyzed with the server-managed local/cloud configuration."""
 
     task_description: str = Field(..., min_length=8, max_length=5000)
+    scenario: str | None = Field(default="COMPLIANT")
 
 
 class PlannedAction(BaseModel):

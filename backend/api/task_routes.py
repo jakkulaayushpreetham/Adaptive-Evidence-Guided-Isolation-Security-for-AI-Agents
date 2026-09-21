@@ -53,6 +53,7 @@ def analyze_task(request: TaskAnalysisRequest):
     """Generate a GPU-local/cloud plan; model output never grants permissions directly."""
     return TaskAnalyzerService().analyze(
         task_description=request.task_description,
+        scenario=request.scenario or "COMPLIANT",
     )
 
 

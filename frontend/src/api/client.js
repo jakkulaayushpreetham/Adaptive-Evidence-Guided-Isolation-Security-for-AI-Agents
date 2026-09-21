@@ -28,9 +28,9 @@ export const api = {
     method: 'POST',
     body: JSON.stringify({ description, capabilities }),
   }),
-  analyzeTask: ({ taskDescription }) => fetchJson(`${API_BASE}/tasks/analyze`, {
+  analyzeTask: ({ taskDescription, scenario = 'COMPLIANT' }) => fetchJson(`${API_BASE}/tasks/analyze`, {
     method: 'POST',
-    body: JSON.stringify({ task_description: taskDescription }),
+    body: JSON.stringify({ task_description: taskDescription, scenario }),
   }),
   getTask: (taskId) => fetchJson(`${API_BASE}/tasks/${taskId}`),
   runTask: (taskId) => fetchJson(`${API_BASE}/tasks/${taskId}/run`, { method: 'POST' }),
