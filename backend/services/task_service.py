@@ -197,6 +197,9 @@ class TaskService:
             except Exception:
                 pass
 
+        caps = self.cap_repo.list_by_task(task_id)
+        active_caps = [c for c in caps if c.status == "ACTIVE"]
+
         runner = AutonomousMissionRunner(
             runtime=self.runtime,
             step_callback=on_step,
@@ -207,6 +210,8 @@ class TaskService:
             task_id=task.task_id,
             persona=persona,
             step_delay_seconds=delay_seconds,
+            task_capabilities=active_caps,
+            task_description=task.description,
         )
 
     def get_task(self, task_id: str) -> dict | None:

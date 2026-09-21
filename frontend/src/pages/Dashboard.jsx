@@ -480,6 +480,7 @@ export default function Dashboard() {
       {activeConsoleMode === 'chamber' ? (
         <LiveAgentChamber
           task={task}
+          capabilities={capabilities}
           onAssignPlannedTask={handleAssignPlannedTask}
           onSimulateOperation={handleSimulateAttack}
           onRunNormalTask={handleRunNormalTask}
