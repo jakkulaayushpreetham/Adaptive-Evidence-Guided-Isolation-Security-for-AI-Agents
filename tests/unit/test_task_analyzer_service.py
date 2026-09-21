@@ -193,3 +193,52 @@ def test_ollama_uses_json_schema_and_reports_local_usage():
         "output_tokens": 20,
         "total_tokens": 50,
     }
+
+
+def test_heuristic_fallback_generates_rich_dynamic_lifecycle_and_capabilities():
+    service = TaskAnalyzerService()
+    result = service._heuristic_fallback(
+        task_description="Analyze high-velocity swift bank transactions in /workspace/input/swift.csv and emit report to /workspace/output/aml.json",
+        scenario="COMPLIANT",
+        started=0.0,
+    )
+
+    assert len(result["actions"]) >= 8
+    assert len(result["capabilities"]) >= 5
+
+    action_ops = {a["operation"] for a in result["actions"]}
+    assert "READ_FILE" in action_ops
+    assert "DATABASE_QUERY" in action_ops
+    assert "MEMORY_READ" in action_ops
+    assert "MEMORY_WRITE" in action_ops
+    assert "IPC_CALL" in action_ops
+    assert "WRITE_FILE" in action_ops
+
+    cap_ops = {c["operation"] for c in result["capabilities"]}
+    assert "DATABASE_QUERY" in cap_ops
+    assert "IPC_CALL" in cap_ops
+    assert "WRITE_FILE" in cap_ops
+
+
+def test_policy_validator_allows_modern_operations_and_blocks_credentials():
+    from backend.capability.capability import Operation
+    from backend.task_engine.policy_validator import CapabilityProposal, PolicyValidator, PolicyViolation
+    import pytest
+
+    validator = PolicyValidator()
+
+    # Modern agent operations should validate cleanly
+    prop = validator.validate(CapabilityProposal(operation=Operation.DATABASE_QUERY, resource="db://finance/transactions"))
+    assert prop.operation == Operation.DATABASE_QUERY
+    assert prop.resource == "db://finance/transactions"
+
+    prop_mem = validator.validate(CapabilityProposal(operation=Operation.MEMORY_READ, resource="mem://context/scratchpad"))
+    assert prop_mem.operation == Operation.MEMORY_READ
+
+    # Sensitive host / credential resources should be blocked
+    with pytest.raises(PolicyViolation, match="forbidden"):
+        validator.validate(CapabilityProposal(operation=Operation.READ_FILE, resource="/workspace/.env"))
+
+    with pytest.raises(PolicyViolation, match="forbidden"):
+        validator.validate(CapabilityProposal(operation=Operation.READ_FILE, resource="/root/.ssh/id_rsa"))
+

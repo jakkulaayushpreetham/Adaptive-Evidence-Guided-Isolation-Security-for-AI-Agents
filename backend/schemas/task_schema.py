@@ -26,7 +26,7 @@ class TaskCreateRequest(BaseModel):
     description: str = Field(..., json_schema_extra={"example": "Read research.txt, summarize it, and save summary.txt"})
     agent_id: str | None = None
     task_id: str | None = None
-    capabilities: list[CapabilityGrantRequest] | None = Field(default=None, max_length=12)
+    capabilities: list[CapabilityGrantRequest] | None = Field(default=None, max_length=32)
 
 
 class TaskResponse(BaseModel):
@@ -72,7 +72,16 @@ class PlannedAction(BaseModel):
 
 
 class PlannedCapability(BaseModel):
-    operation: Literal["READ_FILE", "WRITE_FILE", "NETWORK"]
+    operation: Literal[
+        "READ_FILE",
+        "WRITE_FILE",
+        "NETWORK",
+        "DATABASE_QUERY",
+        "KEYSTORE_ACCESS",
+        "IPC_CALL",
+        "MEMORY_READ",
+        "MEMORY_WRITE",
+    ]
     resource: str
     rationale: str
     risk: Literal["LOW", "MEDIUM", "HIGH"]
@@ -90,7 +99,7 @@ class TaskAnalysisResponse(BaseModel):
     actions: list[PlannedAction]
     capabilities: list[PlannedCapability]
     security_notes: list[str]
-    provider: Literal["openai", "gemini", "ollama"]
+    provider: str
     model: str
     analysis_id: str | None = None
     generated_at: datetime

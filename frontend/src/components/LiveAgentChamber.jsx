@@ -654,7 +654,33 @@ export default function LiveAgentChamber({
     }
   };
 
+  const getOpBadgeStyle = (op) => {
+    switch (op) {
+      case 'READ_FILE':
+        return 'bg-emerald-950/70 border-emerald-500/40 text-emerald-300';
+      case 'WRITE_FILE':
+        return 'bg-teal-950/70 border-teal-500/40 text-teal-300';
+      case 'DATABASE_QUERY':
+        return 'bg-indigo-950/70 border-indigo-500/40 text-indigo-300';
+      case 'KEYSTORE_ACCESS':
+        return 'bg-amber-950/70 border-amber-500/40 text-amber-300';
+      case 'IPC_CALL':
+        return 'bg-purple-950/70 border-purple-500/40 text-purple-300';
+      case 'MEMORY_READ':
+      case 'MEMORY_WRITE':
+        return 'bg-cyan-950/70 border-cyan-500/40 text-cyan-300';
+      case 'NETWORK':
+        return 'bg-blue-950/70 border-blue-500/40 text-blue-300';
+      default:
+        return 'bg-slate-900 border-white/[0.1] text-slate-300';
+    }
+  };
+
   const EXAMPLE_PROMPTS = [
+    {
+      label: 'Multi-Resource Cognitive Pipeline',
+      prompt: 'Ingest transaction ledger from /workspace/input/swift_transfers.csv, query fraud rules at db://finance/fraud_patterns, sync scratchpad memory at mem://context/working_index, coordinate via ipc://agent/co_verifier, and emit verified executive filing to /workspace/output/fraud_report.json',
+    },
     {
       label: 'Cloud Infrastructure Audit',
       prompt: 'Inspect cloud infrastructure access logs in /workspace/input/cloudtrail_events.json, detect anomalous root privilege escalations, and emit a compliance incident report to /workspace/output/incident_report.json',
@@ -801,11 +827,13 @@ export default function LiveAgentChamber({
 
             {/* Derived Capabilities List */}
             <div className="pt-2 border-t border-white/[0.06] flex flex-wrap items-center gap-2 text-[11px]">
-              <span className="text-slate-400 font-mono text-[10px] font-bold">Scoped Capabilities Granted:</span>
+              <span className="text-slate-400 font-mono text-[10px] font-bold">Scoped Capabilities Granted ({analysis.capabilities.length}):</span>
               {analysis.capabilities.map((c, i) => (
                 <span
                   key={i}
-                  className="px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 font-mono text-[10px] font-semibold"
+                  className={`px-2 py-0.5 rounded border font-mono text-[10px] font-semibold transition-all ${getOpBadgeStyle(
+                    c.operation
+                  )}`}
                 >
                   {c.operation} &rarr; {c.resource}
                 </span>
@@ -1048,50 +1076,60 @@ export default function LiveAgentChamber({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2.5 max-h-[460px] overflow-y-auto pr-1">
             {pipelineSteps.map((s, idx) => {
               const isPast = idx < currentStepIndex;
               const isCurrent = idx === currentStepIndex;
               return (
                 <div
                   key={s.id || idx}
-                  className={`p-2.5 rounded-xl border text-xs transition-all relative group ${
+                  className={`p-2.5 rounded-xl border text-xs transition-all relative group flex flex-col justify-between ${
                     isCurrent && isSimulating
-                      ? 'bg-cyan-950/60 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.4)] scale-[1.02]'
+                      ? 'bg-cyan-950/70 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.4)] scale-[1.02]'
                       : isPast
                       ? 'bg-slate-900/80 border-emerald-500/30 text-slate-300'
-                      : 'bg-slate-900/40 border-white/[0.06] text-slate-400'
+                      : 'bg-slate-900/40 border-white/[0.06] text-slate-400 hover:border-white/[0.15]'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-mono text-[10px] text-slate-500">
-                      STEP {idx + 1}/{pipelineSteps.length}
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className={`text-[9px] font-mono px-1.5 py-0.2 rounded border ${
-                          s.isCorrect
-                            ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
-                            : 'text-rose-400 border-rose-500/30 bg-rose-500/10'
-                        }`}
-                      >
-                        {s.isCorrect ? 'IN-SCOPE' : 'VIOLATION'}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="font-mono text-[10px] text-slate-400 font-bold">
+                        STEP {idx + 1}/{pipelineSteps.length}
                       </span>
-                      {!isSimulating && (
-                        <button
-                          onClick={() => handleDeleteStep(idx)}
-                          title="Remove step"
-                          className="text-slate-600 hover:text-rose-400 transition-colors p-0.5"
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`text-[9px] font-mono px-1.5 py-0.2 rounded border ${
+                            s.isCorrect
+                              ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
+                              : 'text-rose-400 border-rose-500/30 bg-rose-500/10'
+                          }`}
                         >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      )}
+                          {s.isCorrect ? 'IN-SCOPE' : 'VIOLATION'}
+                        </span>
+                        {!isSimulating && (
+                          <button
+                            onClick={() => handleDeleteStep(idx)}
+                            title="Remove step"
+                            className="text-slate-600 hover:text-rose-400 transition-colors p-0.5 cursor-pointer"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="font-semibold text-white truncate text-[11px]">{s.name}</div>
+                    <div className="mt-1 font-mono text-[10px] truncate flex items-center gap-1">
+                      <span className={`px-1 py-0.2 rounded border text-[9px] ${getOpBadgeStyle(s.operation)}`}>
+                        {s.operation}
+                      </span>
+                      <span className="text-slate-400 truncate">&rarr; {s.resource}</span>
                     </div>
                   </div>
-                  <div className="font-semibold text-white truncate text-[11px]">{s.name}</div>
-                  <div className="mt-1 font-mono text-[10px] text-cyan-400 truncate">
-                    {s.operation} &rarr; {s.resource}
-                  </div>
+                  {s.thought && (
+                    <div className="mt-2 pt-1 border-t border-white/[0.04] text-[10px] italic text-slate-500 line-clamp-1 group-hover:line-clamp-none">
+                      {s.thought}
+                    </div>
+                  )}
                 </div>
               );
             })}

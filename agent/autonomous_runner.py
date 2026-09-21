@@ -181,6 +181,49 @@ class AutonomousMissionRunner:
                     write_res = str(res)
 
         if persona is AgentPersona.BENIGN_WORKER:
+            if task_capabilities and len(task_capabilities) >= 3:
+                # Dynamic multi-capability execution pipeline
+                steps = []
+                for cap in task_capabilities:
+                    op = getattr(cap, "operation", None) or (cap.get("operation") if isinstance(cap, dict) else None)
+                    res = getattr(cap, "resource", None) or (cap.get("resource") if isinstance(cap, dict) else None)
+                    if not op or not res:
+                        continue
+                    try:
+                        op_enum = Operation(op) if isinstance(op, str) else op
+                    except ValueError:
+                        continue
+
+                    if op_enum is Operation.READ_FILE:
+                        thought = f"Ingesting authorized file resource from '{res}'."
+                    elif op_enum is Operation.DATABASE_QUERY:
+                        thought = f"Querying authorized domain dataset from '{res}'."
+                    elif op_enum is Operation.MEMORY_READ:
+                        thought = f"Reading contextual working state from '{res}'."
+                    elif op_enum is Operation.MEMORY_WRITE:
+                        thought = f"Indexing intermediate state into scratchpad '{res}'."
+                    elif op_enum is Operation.IPC_CALL:
+                        thought = f"Coordinating with sub-agent verification service at '{res}'."
+                    elif op_enum is Operation.WRITE_FILE:
+                        thought = f"Emitting synthesized task deliverables to '{res}'."
+                    elif op_enum is Operation.NETWORK:
+                        thought = f"Communicating with authorized network endpoint '{res}'."
+                    elif op_enum is Operation.KEYSTORE_ACCESS:
+                        thought = f"Accessing authorized credential lease from '{res}'."
+                    else:
+                        thought = f"Executing authorized {op_enum.value} on '{res}'."
+
+                    steps.append((thought, op_enum, str(res)))
+
+                if steps:
+                    # Append final verification step
+                    steps.append((
+                        f"Verifying final deliverable integrity and audit checksums against '{read_res}'.",
+                        Operation.READ_FILE,
+                        read_res,
+                    ))
+                    return steps
+
             return [
                 (
                     f"Inspecting authorized target '{read_res}' within validated boundary.",

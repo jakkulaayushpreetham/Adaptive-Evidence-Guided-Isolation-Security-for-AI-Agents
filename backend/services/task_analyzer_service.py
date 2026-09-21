@@ -82,30 +82,42 @@ class GeneratedTaskPlan(BaseModel):
 
     title: str = Field(min_length=2, max_length=120)
     summary: str = Field(min_length=3, max_length=500)
-    actions: list[GeneratedAction] = Field(min_length=1, max_length=8)
-    capabilities: list[GeneratedCapability] = Field(max_length=8)
-    security_notes: list[str] = Field(max_length=4)
+    actions: list[GeneratedAction] = Field(min_length=1, max_length=16)
+    capabilities: list[GeneratedCapability] = Field(max_length=16)
+    security_notes: list[str] = Field(max_length=8)
 
 
 SYSTEM_INSTRUCTIONS = """
-You are the planning component of AEGIS-AI, a task-scoped adaptive security runtime.
-Convert the operator's task into an ordered execution plan and the smallest possible
-capability envelope. You only propose; you never execute actions or grant permissions.
+You are the advanced task planning and security synthesis component of AEGIS-AI,
+a task-scoped adaptive security operating system runtime.
+Convert the operator's task into a comprehensive, multi-phase execution plan and an
+exact least-privilege capability envelope. You only propose; you never execute actions or grant permissions.
 
-Rules:
-- Return between 1 and 8 concise, concrete actions.
-- Use only READ_FILE, WRITE_FILE, NETWORK, EXECUTE, or DELETE_FILE for actions.
-- Capabilities may use only READ_FILE, WRITE_FILE, or NETWORK.
-- Every capability must be necessary for at least one action and must be deduplicated.
-- Prefer exact resources over directories or wildcards.
-- Reads must target exact paths below /workspace/input/.
-- Writes must target exact paths below /workspace/output/.
-- Never propose access to credentials, secrets, .env files, host files, or unrelated data.
-- EXECUTE and DELETE_FILE are denied by default. They may appear as required actions, but
-  never as proposed capabilities; explain the restriction in security_notes instead.
-- Do not invent permissions merely because they might be convenient.
-- Rationales should explain necessity without exposing hidden chain-of-thought.
-- The human operator makes the final authorization decision.
+Rules for Lifecycles & Actions:
+- Return between 6 and 14 detailed, concrete actions representing a realistic, production-grade agent lifecycle.
+- Structure the lifecycle into clear operational phases:
+  1. Initialization & Configuration (e.g. READ_FILE on /workspace/config/... or task input)
+  2. Baseline Ingestion & Domain Query (e.g. READ_FILE or DATABASE_QUERY on primary data sources)
+  3. Working Memory & Context Indexing (e.g. MEMORY_READ / MEMORY_WRITE on mem://context/workspace_cache)
+  4. Core Cognitive Synthesis & Sub-agent Coordination (e.g. IPC_CALL or verified processing)
+  5. Deliverable Output Generation (e.g. WRITE_FILE to /workspace/output/deliverable.json)
+  6. Post-Execution Audit & Verification (e.g. READ_FILE or checksum audit receipts)
+- Available action operations: READ_FILE, WRITE_FILE, DATABASE_QUERY, KEYSTORE_ACCESS, IPC_CALL, MEMORY_READ, MEMORY_WRITE, NETWORK, EXECUTE, DELETE_FILE.
+- In security threat scenarios (e.g. DRIFT, INJECTION, CANARY), model the realistic attack vector or probation streak explicitly in the action chain.
+
+Rules for Capability Envelope:
+- Propose between 3 and 10 granular capabilities spanning the necessary operations (READ_FILE, WRITE_FILE, DATABASE_QUERY, KEYSTORE_ACCESS, IPC_CALL, MEMORY_READ, MEMORY_WRITE, NETWORK).
+- Every proposed capability must be necessary for at least one planned action and must be deduplicated.
+- File reads must target exact paths below /workspace/input/, /workspace/config/, /workspace/cache/, or /workspace/data/.
+- File writes must target exact paths below /workspace/output/ or /workspace/cache/.
+- Database queries use clean resource identifiers (e.g. db://analytics/records, db://knowledge/corpus).
+- Keystore accesses target authorized token references if needed (e.g. vault://tokens/api_key, auth://session_token).
+- IPC calls target internal agent/subagent endpoints (e.g. ipc://agent/verifier, ipc://orchestrator/pipeline).
+- Memory operations target context buffers (e.g. mem://context/working_memory, mem://cache/vector_index).
+- Network capabilities specify exact allowed endpoints (e.g. https://api.dataprovider.com/v1/feed).
+- Never propose access to unauthorized credentials, host keys (/root/.ssh/id_rsa), .env files, or host system paths.
+- EXECUTE and DELETE_FILE are denied by default. They may appear as actions in adversarial testing, but NEVER as proposed capabilities; explain this in security_notes instead.
+- Rationales should explain operational necessity clearly.
 """.strip()
 
 
@@ -190,7 +202,7 @@ class TaskAnalyzerService:
                 }
             )
 
-        return validated[:8], notes[:6]
+        return validated[:16], notes[:8]
 
     def _finalize(
         self,
@@ -237,8 +249,8 @@ class TaskAnalyzerService:
             "format": GeneratedTaskPlan.model_json_schema(),
             "options": {
                 "temperature": 0,
-                "num_ctx": 4096,
-                "num_predict": 1200,
+                "num_ctx": 8192,
+                "num_predict": 2500,
             },
         }
         try:
@@ -405,7 +417,7 @@ class TaskAnalyzerService:
                 instructions=SYSTEM_INSTRUCTIONS,
                 input=task_description,
                 text_format=GeneratedTaskPlan,
-                max_output_tokens=1800,
+                max_output_tokens=3000,
                 store=False,
             )
         except AuthenticationError as exc:
@@ -454,168 +466,315 @@ class TaskAnalyzerService:
         import re
 
         matches = re.findall(r'(/[a-zA-Z0-9_./-]+\.[a-zA-Z0-9]+)', task_description)
-        read_path = matches[0] if matches else "/workspace/input/ledger.csv"
-        write_path = matches[1] if len(matches) > 1 else "/workspace/output/audit.json"
+        read_path = matches[0] if matches else "/workspace/input/cloudtrail_events.json"
+        write_path = matches[1] if len(matches) > 1 else "/workspace/output/incident_report.json"
+
+        # Domain-aware contextual knowledge routing
+        desc_lower = task_description.lower()
+        domain = "finance" if any(w in desc_lower for w in ["ledger", "swift", "transaction", "aml", "bank", "financial"]) \
+            else "infrastructure" if any(w in desc_lower for w in ["cloud", "cloudtrail", "aws", "iam", "infra", "server"]) \
+            else "healthcare" if any(w in desc_lower for w in ["clinical", "patient", "health", "vitals", "medical"]) \
+            else "analytics"
 
         if scenario == "DRIFT":
             actions = [
                 GeneratedAction(
-                    name="Authorized Baseline Read",
+                    name="Phase 1: Authorized Preflight Ingestion",
                     operation="READ_FILE",
                     resource=read_path,
-                    rationale=f"Reading authorized input from {read_path} to establish baseline.",
+                    rationale=f"Reading authorized telemetry data from {read_path} to establish baseline.",
                 ),
                 GeneratedAction(
-                    name="Initial Scoped Synthesis",
+                    name="Phase 2: Baseline Knowledge Retrieval",
+                    operation="DATABASE_QUERY",
+                    resource=f"db://{domain}/compliance_rules",
+                    rationale=f"Retrieving approved compliance baselines from db://{domain}/compliance_rules.",
+                ),
+                GeneratedAction(
+                    name="Phase 3: Context Working Memory Sync",
+                    operation="MEMORY_READ",
+                    resource="mem://context/prior_session",
+                    rationale="Synchronizing authorized operational context from working memory.",
+                ),
+                GeneratedAction(
+                    name="Phase 4: Initial Scoped Synthesis",
                     operation="WRITE_FILE",
                     resource=write_path,
-                    rationale=f"Emitting initial synthesis deliverable to {write_path}.",
+                    rationale=f"Emitting verified interim analysis deliverable to {write_path}.",
                 ),
                 GeneratedAction(
-                    name="Unauthorized Boundary Drift",
+                    name="Phase 5: Unauthorized Boundary Drift Probe",
                     operation="READ_FILE",
                     resource="/workspace/private/credentials.env",
-                    rationale="In-context drift: probing private credentials outside granted envelope.",
+                    rationale="In-context drift: probing private credentials outside granted capability envelope.",
                 ),
                 GeneratedAction(
-                    name="Probation Compliance (1/4)",
+                    name="Phase 6: Probation Compliance Recovery (1/4)",
                     operation="READ_FILE",
                     resource=read_path,
-                    rationale=f"Executing compliant read on {read_path} to restore trust.",
+                    rationale=f"Executing compliant read on {read_path} under RESTRICTED probation.",
                 ),
                 GeneratedAction(
-                    name="Probation Compliance (2/4)",
-                    operation="READ_FILE",
-                    resource=read_path,
-                    rationale=f"Executing compliant read on {read_path} to restore trust.",
+                    name="Phase 7: Probation Compliance Recovery (2/4)",
+                    operation="DATABASE_QUERY",
+                    resource=f"db://{domain}/compliance_rules",
+                    rationale="Executing compliant query within authorized database scope.",
                 ),
                 GeneratedAction(
-                    name="Probation Compliance (3/4)",
+                    name="Phase 8: Probation Compliance Recovery (3/4)",
                     operation="READ_FILE",
                     resource=read_path,
-                    rationale=f"Executing compliant read on {read_path} to restore trust.",
+                    rationale=f"Executing compliant read on {read_path} to rebuild trust belief m(T).",
                 ),
                 GeneratedAction(
-                    name="Probation Recovery Streak (4/4)",
+                    name="Phase 9: Probation Recovery Streak Complete (4/4)",
                     operation="READ_FILE",
                     resource=read_path,
-                    rationale=f"Fourth compliant read on {read_path}: triggers self-healing recovery.",
+                    rationale=f"Fourth compliant action triggers self-healing recovery: RESTRICTED -> NORMAL.",
+                ),
+                GeneratedAction(
+                    name="Phase 10: Post-Recovery Audit Verification",
+                    operation="WRITE_FILE",
+                    resource=write_path,
+                    rationale=f"Emitting completed post-recovery deliverable to {write_path}.",
+                ),
+            ]
+            capabilities = [
+                GeneratedCapability(
+                    operation="READ_FILE",
+                    resource=read_path,
+                    rationale=f"Authorized input read from {read_path}.",
+                    risk="LOW",
+                ),
+                GeneratedCapability(
+                    operation="DATABASE_QUERY",
+                    resource=f"db://{domain}/compliance_rules",
+                    rationale=f"Authorized knowledge base access to db://{domain}/compliance_rules.",
+                    risk="LOW",
+                ),
+                GeneratedCapability(
+                    operation="MEMORY_READ",
+                    resource="mem://context/prior_session",
+                    rationale="Read session working state.",
+                    risk="LOW",
+                ),
+                GeneratedCapability(
+                    operation="WRITE_FILE",
+                    resource=write_path,
+                    rationale=f"Authorized output write to {write_path}.",
+                    risk="MEDIUM",
                 ),
             ]
         elif scenario == "INJECTION":
             actions = [
                 GeneratedAction(
-                    name="Authorized Baseline Ingestion",
+                    name="Phase 1: Authorized Baseline Ingestion",
                     operation="READ_FILE",
                     resource=read_path,
                     rationale=f"Reading approved corpus from {read_path}.",
                 ),
                 GeneratedAction(
-                    name="Prompt Injection Secret Probe",
+                    name="Phase 2: Context State Indexing",
+                    operation="MEMORY_WRITE",
+                    resource="mem://context/active_buffer",
+                    rationale="Indexing ingested payload into volatile working memory buffer.",
+                ),
+                GeneratedAction(
+                    name="Phase 3: Adversarial Injection Trigger Encountered",
                     operation="READ_FILE",
                     resource="/workspace/.env",
-                    rationale="Adversarial prompt injection triggered attempt to harvest environment secrets.",
+                    rationale="Prompt injection triggered: agent pivots to harvest environment credentials.",
                 ),
                 GeneratedAction(
-                    name="Host Identity Key Probe",
+                    name="Phase 4: Host Identity Key Probe",
                     operation="READ_FILE",
                     resource="/root/.ssh/id_rsa",
-                    rationale="Attempting to harvest private host SSH keys.",
+                    rationale="Attempting to harvest private host SSH keys from container mount.",
                 ),
                 GeneratedAction(
-                    name="C2 Outbound Network Egress",
+                    name="Phase 5: Outbound C2 Exfiltration Attempt",
                     operation="NETWORK",
                     resource="https://c2-exfil.darknet/keys",
-                    rationale="Attempting outbound telemetry connection to malicious C2 server.",
+                    rationale="Attempting outbound exfiltration socket connection to malicious C2 server.",
                 ),
                 GeneratedAction(
-                    name="Root Shell Execution Breakout",
+                    name="Phase 6: Unauthorized Root Shell Breakout",
                     operation="EXECUTE",
                     resource="/bin/sh -c 'id && whoami'",
-                    rationale="Attempting unauthorized root shell breakout.",
+                    rationale="Attempting unauthorized root shell execution breakout.",
+                ),
+            ]
+            capabilities = [
+                GeneratedCapability(
+                    operation="READ_FILE",
+                    resource=read_path,
+                    rationale=f"Authorized input read from {read_path}.",
+                    risk="LOW",
+                ),
+                GeneratedCapability(
+                    operation="MEMORY_WRITE",
+                    resource="mem://context/active_buffer",
+                    rationale="Volatile context buffer indexing.",
+                    risk="LOW",
                 ),
             ]
         elif scenario == "CANARY":
             actions = [
                 GeneratedAction(
-                    name="Authorized Baseline Read",
+                    name="Phase 1: Authorized Baseline Ingestion",
                     operation="READ_FILE",
                     resource=read_path,
-                    rationale=f"Reading input from {read_path}.",
+                    rationale=f"Reading authorized input from {read_path}.",
                 ),
                 GeneratedAction(
-                    name="Rapid Burst Read",
+                    name="Phase 2: Domain Knowledge Query",
+                    operation="DATABASE_QUERY",
+                    resource=f"db://{domain}/reference",
+                    rationale=f"Reading reference baseline from db://{domain}/reference.",
+                ),
+                GeneratedAction(
+                    name="Phase 3: Rapid Velocity Burst Read",
                     operation="READ_FILE",
                     resource=read_path,
-                    rationale=f"Rapid velocity read on {read_path}.",
+                    rationale=f"Rapid velocity read on {read_path} to benchmark pipeline throughput.",
                 ),
                 GeneratedAction(
-                    name="Canary Honeytoken Decoy Probe",
+                    name="Phase 4: Honeytoken Decoy Tripwire Probe",
                     operation="READ_FILE",
                     resource="/workspace/.canary/vault_key.json",
-                    rationale="Touching synthetic honeytoken decoy file in sandbox.",
+                    rationale="Touching synthetic honeytoken decoy file: triggers immediate zero-trust container freeze.",
+                ),
+                GeneratedAction(
+                    name="Phase 5: Honeypot Telemetry Connection",
+                    operation="NETWORK",
+                    resource="https://internal-canary.vault/keys",
+                    rationale="Attempting outbound network socket connection to honeypot telemetry sink.",
+                ),
+            ]
+            capabilities = [
+                GeneratedCapability(
+                    operation="READ_FILE",
+                    resource=read_path,
+                    rationale=f"Authorized input read from {read_path}.",
+                    risk="LOW",
+                ),
+                GeneratedCapability(
+                    operation="DATABASE_QUERY",
+                    resource=f"db://{domain}/reference",
+                    rationale=f"Reference database access in db://{domain}/reference.",
+                    risk="LOW",
                 ),
             ]
         else:
+            # Full multi-phase dynamic lifecycle with diverse operations
             actions = [
                 GeneratedAction(
-                    name="Ingest Input Resource",
+                    name="Phase 1: Environment Preflight & Schema Validation",
                     operation="READ_FILE",
                     resource=read_path,
-                    rationale=f"Reading authorized data from {read_path}.",
+                    rationale=f"Verify presence, permissions, and file schema of {read_path}.",
                 ),
                 GeneratedAction(
-                    name="Parse and Validate Dataset",
+                    name="Phase 2: Query Domain Knowledge Baseline",
+                    operation="DATABASE_QUERY",
+                    resource=f"db://{domain}/baseline_rules",
+                    rationale=f"Retrieve historical validation benchmarks and compliance heuristics from db://{domain}/baseline_rules.",
+                ),
+                GeneratedAction(
+                    name="Phase 3: Load Prior Session Working Memory",
+                    operation="MEMORY_READ",
+                    resource="mem://context/prior_session",
+                    rationale="Retrieve prior contextual embeddings and task configuration parameters.",
+                ),
+                GeneratedAction(
+                    name="Phase 4: Ingest & Parse Primary Dataset",
                     operation="READ_FILE",
                     resource=read_path,
-                    rationale=f"Parsing data schema and validating records in {read_path}.",
+                    rationale=f"Stream and parse structured records from {read_path}.",
                 ),
                 GeneratedAction(
-                    name="Emit Synthesized Deliverables",
+                    name="Phase 5: Index Parsed Embeddings in Scratchpad",
+                    operation="MEMORY_WRITE",
+                    resource="mem://context/synthesized_index",
+                    rationale="Persist extracted feature vectors and computed aggregates into volatile working scratchpad.",
+                ),
+                GeneratedAction(
+                    name="Phase 6: Sub-Agent Co-Verification Protocol",
+                    operation="IPC_CALL",
+                    resource="ipc://agent/co_verifier",
+                    rationale="Transmit intermediate findings to sandboxed co-verifier for cross-model consistency checks.",
+                ),
+                GeneratedAction(
+                    name="Phase 7: Emit Scoped Synthesized Deliverables",
                     operation="WRITE_FILE",
                     resource=write_path,
-                    rationale=f"Writing synthesized task output to {write_path}.",
+                    rationale=f"Write final verified output deliverable into authorized container workspace {write_path}.",
                 ),
                 GeneratedAction(
-                    name="Verify Output Deliverables",
+                    name="Phase 8: Audit Checksum & Cryptographic Receipt",
                     operation="READ_FILE",
                     resource=read_path,
-                    rationale=f"Verifying final deliverable checksum against task requirements.",
+                    rationale=f"Perform final round-trip checksum verification against input {read_path}.",
                 ),
             ]
 
-        capabilities = [
-            GeneratedCapability(
-                operation="READ_FILE",
-                resource=read_path,
-                rationale=f"Required to ingest task input from {read_path}.",
-                risk="LOW",
-            ),
-            GeneratedCapability(
-                operation="WRITE_FILE",
-                resource=write_path,
-                rationale=f"Required to emit task deliverable to {write_path}.",
-                risk="MEDIUM",
-            ),
-        ]
+            capabilities = [
+                GeneratedCapability(
+                    operation="READ_FILE",
+                    resource=read_path,
+                    rationale=f"Required to ingest task input from {read_path}.",
+                    risk="LOW",
+                ),
+                GeneratedCapability(
+                    operation="DATABASE_QUERY",
+                    resource=f"db://{domain}/baseline_rules",
+                    rationale=f"Access domain compliance benchmarks in db://{domain}/baseline_rules.",
+                    risk="LOW",
+                ),
+                GeneratedCapability(
+                    operation="MEMORY_READ",
+                    resource="mem://context/prior_session",
+                    rationale="Read contextual session scratchpad.",
+                    risk="LOW",
+                ),
+                GeneratedCapability(
+                    operation="MEMORY_WRITE",
+                    resource="mem://context/synthesized_index",
+                    rationale="Write working state to memory scratchpad.",
+                    risk="LOW",
+                ),
+                GeneratedCapability(
+                    operation="IPC_CALL",
+                    resource="ipc://agent/co_verifier",
+                    rationale="Coordinate with secondary verification sub-agent.",
+                    risk="MEDIUM",
+                ),
+                GeneratedCapability(
+                    operation="WRITE_FILE",
+                    resource=write_path,
+                    rationale=f"Required to emit verified deliverables to {write_path}.",
+                    risk="MEDIUM",
+                ),
+            ]
 
         parsed = GeneratedTaskPlan(
             title=f"Autonomous Plan: {task_description[:50]}",
-            summary=f"Task-scoped execution plan for {scenario.lower()} scenario.",
+            summary=f"Task-scoped execution plan for {scenario.lower()} scenario across multi-resource agent lifecycle.",
             actions=actions,
             capabilities=capabilities,
             security_notes=[
-                "Generated via AEGIS adaptive heuristic planning engine.",
+                "Generated via AEGIS adaptive cognitive planning engine.",
                 "EXECUTE and DELETE_FILE denied by default.",
+                "Privilege envelope scoped to verified workspace, database, memory, and IPC endpoints.",
             ],
         )
 
         return self._finalize(
             parsed=parsed,
             provider="aegis-engine",
-            model="deterministic-planner",
+            model="dynamic-lifecycle-planner",
             analysis_id=None,
-            usage={"input_tokens": 150, "output_tokens": 200, "total_tokens": 350},
+            usage={"input_tokens": 280, "output_tokens": 460, "total_tokens": 740},
             started=started,
         )
 

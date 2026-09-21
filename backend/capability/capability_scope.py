@@ -13,6 +13,19 @@ def normalize_resource(resource: str) -> str:
 
     resource = resource.replace("\\", "/")
 
+    # Check for directory traversal attempts
+    if "/../" in resource or resource.startswith("../") or resource.endswith("/..") or resource == "..":
+        raise InvalidResourceError("Parent-directory traversal is not permitted.")
+
+    # URI schemes like db://, mem://, vault://, ipc://, https://, http://
+    if "://" in resource:
+        scheme, _, path_part = resource.partition("://")
+        if not scheme.isalnum():
+            raise InvalidResourceError("Invalid URI scheme.")
+        if ".." in PurePosixPath(path_part).parts:
+            raise InvalidResourceError("Parent-directory traversal is not permitted.")
+        return f"{scheme.lower()}://{path_part.strip('/')}"
+
     path = PurePosixPath(resource)
 
     if ".." in path.parts:
