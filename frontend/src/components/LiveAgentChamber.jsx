@@ -688,17 +688,31 @@ export default function LiveAgentChamber({
             </div>
           </div>
 
-          {onResetDemo && (
-            <button
-              onClick={onResetDemo}
-              disabled={isSimulating}
-              title="Reset agent and token to clean baseline"
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-white/[0.1] text-xs font-semibold transition-all cursor-pointer"
-            >
-              <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
-              <span>Reboot Agent</span>
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {onOpenEventInjector && (
+              <button
+                type="button"
+                onClick={onOpenEventInjector}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white text-xs font-bold transition-all shadow-[0_0_16px_rgba(168,85,247,0.45)] hover:scale-[1.03] cursor-pointer border border-white/20"
+                title="Open the Interactive Attack & Event Injector console"
+              >
+                <Radio className="w-3.5 h-3.5 text-cyan-200 animate-pulse" />
+                <span>Attack &amp; Event Injector</span>
+              </button>
+            )}
+
+            {onResetDemo && (
+              <button
+                onClick={onResetDemo}
+                disabled={isSimulating}
+                title="Reset agent and token to clean baseline"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-white/[0.1] text-xs font-semibold transition-all cursor-pointer shadow-sm"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
+                <span>Reboot Agent</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Task Input Form */}
@@ -872,6 +886,18 @@ export default function LiveAgentChamber({
               <LayoutGrid className="w-3.5 h-3.5 text-purple-400" />
               <span>{isCatalogOpen ? 'Hide 24-Action Catalog ▲' : 'Open 24-Action Catalog ▼'}</span>
             </button>
+
+            {onOpenEventInjector && (
+              <button
+                type="button"
+                onClick={onOpenEventInjector}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-rose-950/80 to-purple-950/80 hover:from-rose-900 hover:to-purple-900 text-rose-300 border border-rose-500/40 text-xs font-bold transition-all shadow-[0_0_12px_rgba(244,63,94,0.3)] hover:scale-[1.02] cursor-pointer"
+                title="Launch the Interactive Attack & Event Injector console"
+              >
+                <Radio className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
+                <span>Attack Injector Console</span>
+              </button>
+            )}
 
             <button
               onClick={() => setIsAddStepOpen((prev) => !prev)}

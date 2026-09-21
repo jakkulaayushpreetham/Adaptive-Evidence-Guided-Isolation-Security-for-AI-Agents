@@ -445,10 +445,10 @@ export default function Dashboard() {
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setIsEventDrawerOpen(true)}
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-900/60 to-cyan-900/60 hover:from-purple-800/80 hover:to-cyan-800/80 border border-cyan-500/40 text-cyan-200 text-xs font-bold transition-all shadow-[0_0_15px_rgba(6,182,212,0.25)] hover:scale-[1.02] cursor-pointer"
+            className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white text-xs font-bold transition-all shadow-[0_0_18px_rgba(168,85,247,0.4)] hover:scale-[1.03] cursor-pointer border border-white/20"
           >
-            <Radio className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-            <span>Attack Injector (16+ Scenarios)</span>
+            <Radio className="w-3.5 h-3.5 text-cyan-200 animate-pulse" />
+            <span>Interactive Attack &amp; Event Injector</span>
           </button>
 
           <AgentStatus
@@ -568,6 +568,19 @@ export default function Dashboard() {
         onSimulateOperation={handleSimulateAttack}
         isRunning={isRunningTask}
       />
+
+      {/* Persistent Floating Trigger: Interactive Attack & Event Injector */}
+      <div className="fixed bottom-5 right-5 z-40">
+        <button
+          onClick={() => setIsEventDrawerOpen(true)}
+          className="flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-extrabold text-xs shadow-[0_6px_25px_rgba(168,85,247,0.55)] border border-white/25 hover:scale-105 transition-all cursor-pointer backdrop-blur-md group"
+          title="Open the Interactive Attack & Event Injector console"
+        >
+          <Radio className="w-4 h-4 text-cyan-200 animate-pulse group-hover:rotate-12 transition-transform" />
+          <span>⚡ Attack &amp; Event Injector</span>
+        </button>
+      </div>
     </div>
   );
 }
+
